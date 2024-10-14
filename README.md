@@ -7,9 +7,10 @@
 
 <h2> SITL Simulation</h2>
 
-1. pip install dronekit-sitl -UI or pip install dronekit-sitl -UI --user
-2. python -m dronekit_sitl copter
-3. install mission planner https://github.com/dronekit/dronekit-python/issues/1132 (collections.abc.MutableMapping Change in dronekit/__init__.py)
-4. Run Test
-5. Click Connect on Top Right Corner on Mission Planner (set connection type to tcp)
-6. Set Hostname to 127.0.0.1 and Port to default port 5763
+1. from drone local repository use command in terminal: 
+
+        pip install -r requirements.txt
+2. install mission planner https://github.com/dronekit/dronekit-python/issues/1132 (collections.abc.MutableMapping Change in dronekit/__init__.py)
+3. Run Test
+4. Click Connect on Top Right Corner on Mission Planner (set connection type to tcp)
+5. Set Hostname to 127.0.0.1 and Port to default port 5763
