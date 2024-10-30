@@ -1,5 +1,6 @@
 import cv2
 import cv2.aruco as aruco
+import numpy as np
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 
@@ -81,7 +82,24 @@ def get_detected_markers(frame, camera: Camera = None):
 
     if ids is not None:
         # Show the detected markers
-        frame = aruco.drawDetectedMarkers(frame, corners, ids)
+        frame = aruco.drawDetectedMarkers(frame, corners)
+
+        for i, marker_id in enumerate(ids.flatten()):
+            corner = corners[i][0]
+
+            if marker_id == 0:
+                color = (0,255,0)
+                zone_label = "Drop Zone"
+            else:
+                color = (0,0,255)
+                zone_label = "Non-Drop Zone"
+            
+            cv2.polylines(frame, [corner.astype(int)], isClosed=True, color=color, thickness=3)
+            zone_label_position = np.mean(corner, axis=0).astype(int)
+            cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+            id_label_position = (zone_label_position[0], zone_label_position[1] + 50)
+            cv2.putText(frame, f"ID: {marker_id}", id_label_position, cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+
         camera.showFrame(frame)
 
         # Add all detected ids to the list
