@@ -2,7 +2,7 @@ import time
 from serial import Serial
 
 # Adjust this to the correct port for your setup
-PORT = '/dev/ttyAMA0'  # Change to your actual port
+PORT = 'COM4'  # Change to your actual port
 BAUDRATE = 115200      # Make sure this matches the ESP32 baud rate
 
 def main():
