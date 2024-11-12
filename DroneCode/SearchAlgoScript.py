@@ -11,7 +11,7 @@ import webbrowser  # so folium can make a map display
 import math
 import numpy as np
 from math import radians, cos, sin, sqrt, atan2, atan, tan
-from geopy.distance import distance
+#from geopy.distance import distance
 
 
 FRAME_SIZE_OVERLAP = 0.9  # overlap of the frames in the search pattern
