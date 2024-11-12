@@ -1,131 +1,156 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-© Copyright 2015-2016, 3D Robotics.
-simple_goto.py: GUIDED mode "simple goto" example (Copter Only)
-
-Demonstrates how to arm and takeoff in Copter and how to navigate to points using Vehicle.simple_goto.
-
-Full documentation is provided at http://python.dronekit.io/examples/simple_goto.html
-"""
-
 from __future__ import print_function
 import time
-from dronekit import connect, VehicleMode, LocationGlobalRelative
+from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
+
 import csv
+import math
+from math import radians, cos, sin, sqrt, atan2, atan, tan
+from SearchAlgoScript import *
+
 
 # Set up option parsing to get connection string
 import argparse
-parser = argparse.ArgumentParser(description='Commands vehicle using vehicle.simple_goto.')
-parser.add_argument('--connect',
-                    help="Vehicle connection target string. If not specified, SITL automatically started and used.")
+
+parser = argparse.ArgumentParser(description="Connect to a drone.")
+parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
+# Set SIMULATE_DRONE based on the --livedrone flag
+SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
-def load_waypoints_from_csv(file_path):
-    global ALTITUDE
-    csv_loaded_waypoints = []
-    with open(file_path, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            latitude = float(row['latitude'])
-            longitude = float(row['longitude'])
-            altitude = float(ALTITUDE)
-            csv_loaded_waypoints.append(LocationGlobalRelative(latitude, longitude, altitude))
-    return csv_loaded_waypoints
+# Used to connect to copter with args from command line
+def connectMyCopter():
+    if SIMULATE_DRONE:
+        # Create a SITL drone instance instead of launching one beforehand
+        import dronekit_sitl
+        sitl = dronekit_sitl.start_default(32.92019271850586, -96.9479751586914)
+        connection_string = sitl.connection_string()
+        vehicle = connect(connection_string, wait_ready=True)
 
-# Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+    else:
+        vehicle = connect('/dev/ttyACM0', baud=115200, wait_ready=True) 
+        '''
+        This is the connect they were using in 23-24 pqqtest2
+        FIX THIS FOR FLIGHT NOT SURE: https://dronekit.netlify.app/guide/connecting_vehicle.html
+        '''
 
+    return vehicle
 
-# Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
-vehicle = connect(connection_string, wait_ready=True)
+# Used to arm the drone
+def arm_drone(vehicle):
+    while not vehicle.is_armable:  # While the drone hasn't been armed
+        print("Waiting for drone to become armable")
+        time.sleep(1)  # Wait one second before checking if drone is armable
+    print("The drone is now armable")
 
-
-def arm_and_takeoff(aTargetAltitude):
-    """
-    Arms vehicle and fly to aTargetAltitude.
-    """
-
-    print("Basic pre-arm checks")
-    # Don't try to arm until autopilot is ready
-    while not vehicle.is_armable:
-        print(" Waiting for vehicle to initialise...")
-        time.sleep(1)
-
-    print("Arming motors")
-    # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
+    while vehicle.mode != 'GUIDED':  # While drone is not in guided mode
+        print("The drone is not in guided mode yet")
+        time.sleep(1)  # Wait one second before checking if drone is in guided mode
+    print("The drone is now in guided mode")
+
     vehicle.armed = True
+    while not vehicle.armed:  # While the vehicle has not been armed
+        print("Waiting for drone to arm")
+        time.sleep(1)  # Wait one second before checking if drone has been armed
+    print("The drone has now been armed")
 
-    # Confirm vehicle armed before attempting to take off
-    while not vehicle.armed:
-        print(" Waiting for arming...")
+    # Check if GPS is functioning
+    while vehicle.gps_0.fix_type < 2:  # Ensure GPS is ready
+        print(" Waiting for GPS to initialise...", vehicle.gps_0.fix_type)
         time.sleep(1)
+    print("Copter GPS Ready")
 
+# Used to take off the drone to a specific altitude
+def takeoff_drone(vehicle, targetAltitude):
     print("Taking off!")
-    vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
+    vehicle.simple_takeoff(targetAltitude)  # Take off to target altitude
 
-    # Wait until the vehicle reaches a safe height before processing the goto
-    #  (otherwise the command after Vehicle.simple_takeoff will execute
-    #   immediately).
+    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
+    # after Vehicle.simple_takeoff will execute immediately).
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
+        if vehicle.location.global_relative_frame.alt >= targetAltitude * 0.95:
             print("Reached target altitude")
             break
         time.sleep(1)
 
+# def arm_and_takeoff(vehicle, aTargetAltitude):
+#     """
+#     Arms vehicle and fly to aTargetAltitude.
+#     """
 
-arm_and_takeoff(4)
+#     print("Basic pre-arm checks")
+#     # Don't try to arm until autopilot is ready
+#     while not vehicle.is_armable:
+#         print(" Waiting for vehicle to initialise...")
+#         time.sleep(1)
+
+#     print("Arming motors")
+#     # Copter should arm in GUIDED mode
+#     vehicle.mode = VehicleMode("GUIDED")
+#     vehicle.armed = True
+
+#     # Confirm vehicle armed before attempting to take off
+#     while not vehicle.armed:
+#         print(" Waiting for arming...")
+#         time.sleep(1)
+
+#     print("Taking off!")
+#     vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
+
+#     # Wait until the vehicle reaches a safe height before processing the goto
+#     #  (otherwise the command after Vehicle.simple_takeoff will execute
+#     #   immediately).
+#     while True:
+#         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
+#         # Break and return from function just below target altitude.
+#         if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
+#             print("Reached target altitude")
+#             break
+#         time.sleep(1)
+
+def flyInSearchPattern(vehicle):
+    search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
+    # Iterate over waypoints, expecting lists of [latitude, longitude]
+    for wp in search_waypoints:
+        if SIMULATE_DRONE:
+            for wp in search_waypoints:
+                print("Waypoint:", wp)
+
+                # Go to the waypoint
+                vehicle.simple_goto(wp)
+                time.sleep(20)
+        else:
+            print("Waypoint:", wp)
+
+            # Go to the waypoint
+            vehicle.simple_goto(wp)
+            currentLoc = (enordaCopter.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
+            currentWP = (wp.lat, wp.lon)
+            while(equirectangular_approximation(currentLoc,currentWP)*1000 > .5): 
+                
+                print(f"CurrentLocation: {currentLoc}")
+                print("Distance:", equirectangular_approximation(currentLoc,currentWP))
+                time.sleep(1)
+
+enordaCopter = connectMyCopter()
+
+arm_drone(enordaCopter)
+waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 
 
 print("Set default/target airspeed to 3")
-vehicle.airspeed = 3
+enordaCopter.airspeed = 3
 
-# print("Going towards first point for 30 seconds ...")
-# point1 = LocationGlobalRelative(32.92043316003047, -96.94797515869143, 4)
-# vehicle.simple_goto(point1)
+takeoff_drone(enordaCopter, 4)
 
-# # sleep so we can see the change in map
-# time.sleep(30)
-
-# print("Going towards second point for 30 seconds (groundspeed set to 10 m/s) ...")
-# point2 = LocationGlobalRelative(-35.363244, 149.168801, 20)
-# vehicle.simple_goto(point2, groundspeed=10)
-
-# # sleep so we can see the change in map
-# time.sleep(30)
-
-search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
-# Print loaded waypoints to verify format
-print("Loaded waypoints:", search_waypoints)
-
-# Iterate over waypoints, expecting lists of [latitude, longitude]
-for wp in search_waypoints:
-    print("Waypoint:", wp)  # Already a LocationGlobalRelative object
-
-    # Go to the waypoint
-    vehicle.simple_goto(wp)
-    time.sleep(10)
-    print("Going to:", wp)
+flyInSearchPattern(enordaCopter)
 
 print("Returning to Launch")
-vehicle.mode = VehicleMode("RTL")
+enordaCopter.mode = VehicleMode("RTL")
 
 # Close vehicle object before exiting script
 print("Close vehicle object")
-vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl:
-    sitl.stop()
+enordaCopter.close()
