@@ -2,7 +2,7 @@ import time
 from serial import Serial
 
 # Adjust this to the correct port for your setup
-PORT = '/dev/ttyAMA0'  # Change to your actual port
+PORT = '/dev/ttyUSB0'  # Change to your actual port
 BAUDRATE = 115200      # Make sure this matches the ESP32 baud rate
 
 def main():
@@ -11,11 +11,10 @@ def main():
     with Serial(PORT, BAUDRATE, timeout=1) as ser:
         time.sleep(2)  # Give time for the connection to establish
         while True:
-            # Prepare the data you want to send
-            data_to_send = "Hello from Jetson!\n"  # Example data
-            ser.write(data_to_send.encode())  # Send data
-            print(f"Sent: {data_to_send.strip()}")
-            time.sleep(2)  # Wait before sending the next message
+            data = ser.readline()
+            if data: 
+                print(data) 
+            time.sleep(1)
 
 if __name__ == "__main__":
     main()
