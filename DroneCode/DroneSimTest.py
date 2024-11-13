@@ -1,5 +1,12 @@
 from __future__ import print_function
 import time
+import sys
+
+# make iti work with python 3.10+
+if sys.version_info.major == 3 and sys.version_info.minor >= 10:
+    import collections
+    setattr(collections, "MutableMapping", collections.abc.MutableMapping)
+
 from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
 
 import csv
@@ -93,15 +100,16 @@ def flyInSearchPattern(vehicle):
 
             # Go to the waypoint
             vehicle.simple_goto(wp)
-            currentLoc = (enordaCopter.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
+            currentLoc = (vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
             currentWP = (wp.lat, wp.lon)
             while(equirectangular_approximation(currentLoc,currentWP)*1000 > .5): 
                 
-                print(f"CurrentLocation: {currentLoc}")
+                print(f"CurrentLocation: ({vehicle.location.global_relative_frame.lat:.12f}, {vehicle.location.global_relative_frame.lon:.12f})")
                 print("Distance:", equirectangular_approximation(currentLoc,currentWP))
                 time.sleep(1)
 
 enordaCopter = connectMyCopter()
+print(f"CurrentLocation: ({enordaCopter.location.global_relative_frame.lat:.12f}, {enordaCopter.location.global_relative_frame.lon:.12f})")
 
 arm_drone(enordaCopter)
 waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 
