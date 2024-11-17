@@ -19,12 +19,19 @@ args = parser.parse_args()
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
+cornerCoordinates = [
+    [1, 32.920440673828125, -96.94830322265625],
+    [2, 32.920440673828125, -96.9479751586914],
+    [3, 32.92019271850586, -96.9479751586914],
+    [4, 32.92019271850586, -96.94831085205078]
+]
+
 # Used to connect to copter with args from command line
 def connectMyCopter():
     if SIMULATE_DRONE:
         # Create a SITL drone instance instead of launching one beforehand
         import dronekit_sitl
-        sitl = dronekit_sitl.start_default(32.92019271850586, -96.9479751586914)
+        sitl = dronekit_sitl.start_default(32.92019271850586, -96.94831085205078)
         connection_string = sitl.connection_string()
         vehicle = connect(connection_string, wait_ready=True)
 
@@ -77,33 +84,44 @@ def takeoff_drone(vehicle, targetAltitude):
             break
         time.sleep(1)
 
+def getCurrentLocation(vehicle):
+    currentLoc = (vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
+    return currentLoc
+ 
 def flyInSearchPattern(vehicle):
     search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
     # Iterate over waypoints, expecting lists of [latitude, longitude]
     for wp in search_waypoints:
         if SIMULATE_DRONE:
             for wp in search_waypoints:
-                print("Waypoint:", wp)
-
+                currentWP = (wp.lat, wp.lon)
+                print("Waypoint:", currentWP)
                 # Go to the waypoint
                 vehicle.simple_goto(wp)
-                time.sleep(20)
-        else:
-            print("Waypoint:", wp)
-
-            # Go to the waypoint
-            vehicle.simple_goto(wp)
-            currentLoc = (vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
-            currentWP = (wp.lat, wp.lon)
-            while(equirectangular_approximation(currentLoc,currentWP)*1000 > .5): 
+                #time.sleep(20)
+                while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5): 
                 
-                print(f"CurrentLocation: ({vehicle.location.global_relative_frame.lat:.12f}, {vehicle.location.global_relative_frame.lon:.12f})")
-                print("Distance:", equirectangular_approximation(currentLoc,currentWP))
-                time.sleep(1)
+                    print(f"Current Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
+                    print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+                    time.sleep(1)
+        else:
+            for wp in search_waypoints:
+                currentWP = (wp.lat, wp.lon)
+                print("Waypoint:", currentWP)
+                # Go to the waypoint
+                vehicle.simple_goto(wp)
+                #time.sleep(20)
+                while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5): 
+                
+                    print(f"Current Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
+                    print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+                    time.sleep(1)
 
 enordaCopter = connectMyCopter()
 
-print(f"CurrentLocation: ({enordaCopter.location.global_relative_frame.lat:.12f}, {enordaCopter.location.global_relative_frame.lon:.12f})")
+print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
+print("Heading: ", enordaCopter.heading)
+
 arm_drone(enordaCopter)
 
 waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 

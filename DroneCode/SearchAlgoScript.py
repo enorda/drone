@@ -11,11 +11,35 @@ import webbrowser  # so folium can make a map display
 import math
 import numpy as np
 from math import radians, cos, sin, sqrt, atan2, atan, tan
-#from geopy.distance import distance
-
+from geopy.distance import distance
+from geopy.distance import geodesic
+from geopy.point import Point
 
 FRAME_SIZE_OVERLAP = 0.9  # overlap of the frames in the search pattern
 ALTITUDE = 4
+
+def verify_box_distances(box, expected_distance_yards=30):
+    """
+    Verify if the distance between each corner of the box is as expected.
+    :param box: List of points [(id, lat, lon), ...] representing the corners of the box
+    :param expected_distance_yards: The expected distance between adjacent points in yards (default: 30 yards)
+    :return: A list of booleans where True means the distance matches the expected value
+    """
+    yard_to_meter = 0.9144  # Conversion factor
+    expected_distance_meters = expected_distance_yards * yard_to_meter
+    
+    # Convert box points into a sequence of tuples (latitude, longitude)
+    coords = [(point[1], point[2]) for point in box]
+    
+    # Compare distances between adjacent points (loop around to the start for the last segment)
+    results = []
+    for i in range(len(coords)):
+        coord1 = coords[i]
+        coord2 = coords[(i + 1) % len(coords)]  # Next point, loop around to first
+        distance = equirectangular_approximation(coord1, coord2)
+        results.append(abs(distance - expected_distance_meters) <= .1)  # Allow a small tolerance
+    
+    return results
 
 def generate_box(current_location, heading):
     """
@@ -28,26 +52,25 @@ def generate_box(current_location, heading):
     yard_to_meter = 0.9144
     side_offset = 30 * yard_to_meter  # 30 yards in meters
     
-    # Calculate each corner of the box
     # Bottom-Right (starting location)
-    bottom_right = (current_location[0], current_location[1])
+    bottom_right = Point(current_location[0], current_location[1])
     
     # Bottom-Left: 30 yards to the left
     left_heading = (heading + 270) % 360
-    bottom_left = distance(meters=side_offset).destination(bottom_right, left_heading)
+    bottom_left = geodesic(meters=side_offset).destination(bottom_right, left_heading)
     
     # Top-Left: 30 yards forward from the Bottom-Left
-    top_left = distance(meters=side_offset).destination((bottom_left.latitude, bottom_left.longitude), heading)
+    top_left = geodesic(meters=side_offset).destination(bottom_left, heading)
     
     # Top-Right: 30 yards forward from the Bottom-Right
-    top_right = distance(meters=side_offset).destination(bottom_right, heading)
+    top_right = geodesic(meters=side_offset).destination(bottom_right, heading)
     
     # Return points as a list of tuples
     return [
-        (bottom_right[0], bottom_right[1]),               # Bottom-Right
-        (bottom_left.latitude, bottom_left.longitude),     # Bottom-Left
-        (top_left.latitude, top_left.longitude),           # Top-Left
-        (top_right.latitude, top_right.longitude)          # Top-Right
+        [1, top_left.latitude, top_left.longitude],  # Top-Left
+        [2, top_right.latitude, top_right.longitude],  # Top-Right
+        [3, bottom_right.latitude, bottom_right.longitude],  # Bottom-Right
+        [4, bottom_left.latitude, bottom_left.longitude],  # Bottom-Left
     ]
 
 
@@ -128,10 +151,10 @@ def equirectangular_approximation(coord1, coord2,alt = None):
     - coord1: Tuple of (latitude, longitude) for the first point.
     - coord2: Tuple of (latitude, longitude) for the second point.
     Returns:
-    - Distance in kilometers.
+    - Distance in meters.
     """
-    # Earth radius in kilometers
-    R = 6371.0
+    # Earth radius in meters
+    R = 6371000 
     # Convert latitude and longitude from degrees to radians
     lat1, lon1 = map(radians, coord1)
     lat2, lon2 = map(radians, coord2)
@@ -157,24 +180,6 @@ def save_waypoints_to_csv(waypoints, csv_filename):
         for waypoint in waypoints:
             waypoint_index += 1
             writer.writerow({'latitude': waypoint[0], 'longitude': waypoint[1]})  # add waypoint to file
-
-
-def generate_zigzag_waypoints(bottom_left, top_right, rows, cols):
-    zig_waypoints = []
-    # Calculate the step size for rows and columns
-    row_step = (top_right[0] - bottom_left[0]) / (rows - 1)
-    col_step = (top_right[1] - bottom_left[1]) / (cols - 1)
-
-    for i in range(rows):
-        # Adjust the column order for every other row to create a zigzag pattern
-        col_range = range(cols) if i % 2 == 0 else reversed(range(cols))
-
-        for j in col_range:
-            lat = bottom_left[0] + i * row_step
-            lon = bottom_left[1] + j * col_step
-            zig_waypoints.append((lat, lon))
-
-    return zig_waypoints
 
 def generate_zig_zag_path_waypoints(point1, point2, point3, num_cols, num_rows):
     # Calculate the side vectors
@@ -273,16 +278,8 @@ def load_waypoints_from_csv(file_path):
     return csv_loaded_waypoints
 
 def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
-    global home_location
-    global fence_waypoint_array
-    global home_latitude
-    global home_longitude
-    global home_altitude
-
-
-    fence_waypoint_array = [] 
     # Wait for the vehicle to have a GPS fix
-
+    fence_waypoint_array = []
     while not vehicle.gps_0.fix_type:
         print("Waiting for the GPS to have a fix...")
         time.sleep(1)
@@ -301,18 +298,29 @@ def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
     cmds = vehicle.commands
     print(f"cmds: {cmds}")
 
-    # if SIMULATE_DRONE is True:
-    #     # vehicle.home_location = LocationGlobal(vehicle.location.global_frame.lat, vehicle.location.global_frame.lon, vehicle.location.global_frame.alt)
-    #     vehicle.home_location = LocationGlobal(31, 31, 180)
     # Print waypoint data
     if len(cmds) > 0:
         print("Mission commands:")
         for cmd in cmds:
             print(f"{cmd.seq}, {cmd.x}, {cmd.y}, {cmd.z}")
             fence_waypoint_array.append([cmd.seq, cmd.x, cmd.y, cmd.z])
+        # Specify the rectangular area with four corners defined
+        top_left_corner = (fence_waypoint_array[0][1], fence_waypoint_array[0][2])  # all copied from mission planner
+        top_right_corner = (fence_waypoint_array[1][1], fence_waypoint_array[1][2])
+        bottom_right_corner = (fence_waypoint_array[2][1], fence_waypoint_array[2][2])
+        bottom_left_corner = (fence_waypoint_array[3][1], fence_waypoint_array[3][2])
+        landing_zone_waypoint = (fence_waypoint_array[4][1], fence_waypoint_array[4][2])  # The location to land the drone at after finishing search and shoot
+
     else:
         print("No mission commands downloaded.")
-        sys.exit("Exiting due to no waypoint data from cmds")
+        print("Using auto generated coordinates.")
+        autoBoxWpArray =  generate_box((vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon),90)
+        top_left_corner = (autoBoxWpArray[0][1], autoBoxWpArray[0][2])
+        top_right_corner = (autoBoxWpArray[1][1], autoBoxWpArray[1][2])
+        bottom_right_corner = (autoBoxWpArray[2][1], autoBoxWpArray[2][2])
+        bottom_left_corner = (autoBoxWpArray[3][1], autoBoxWpArray[3][2])
+
+        landing_zone_waypoint = (autoBoxWpArray[3][1], autoBoxWpArray[3][2])  # Landing Zone in autobox is just designated as Bottom Left
 
     # Wait for the home location to be set
     while vehicle.home_location is None:
@@ -335,18 +343,12 @@ def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
 
     # print the fence data defined as 4 normal waypoints in mission planner
 
-    # Specify the rectangular area with four corners defined
-    top_left_corner = (fence_waypoint_array[0][1], fence_waypoint_array[0][2])  # all copied from mission planner
-    top_right_corner = (fence_waypoint_array[1][1], fence_waypoint_array[1][2])
-    bottom_right_corner = (fence_waypoint_array[2][1], fence_waypoint_array[2][2])
-    bottom_left_corner = (fence_waypoint_array[3][1], fence_waypoint_array[3][2])
-
-    landing_zone_waypoint = (fence_waypoint_array[4][1], fence_waypoint_array[4][2])  # The location to land the drone at after finishing search and shoot
 
     # get width and length of the search area in meters
-    horizontal_distance = equirectangular_approximation(top_left_corner, top_right_corner) * 1000
-    vertical_dist = equirectangular_approximation(top_right_corner, bottom_right_corner) * 1000
+    horizontal_distance = equirectangular_approximation(top_left_corner, top_right_corner)
+    vertical_dist = equirectangular_approximation(top_right_corner, bottom_right_corner)
 
+    print(f"Horiz: {horizontal_distance}, Vert: {vertical_dist} ")
     # Number of rows and columns in the zigzag grid based on the size of the field and radius of points
     try:
         cols = int(horizontal_distance // (frame_width_meters * FRAME_SIZE_OVERLAP))
@@ -375,8 +377,10 @@ def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
     # should the Code generate a HTML map also?
     genMap = True
     if genMap is True:
-        generate_folium_map(waypoints, fence_waypoint_array)
-
+        if len(fence_waypoint_array) > 0: 
+            generate_folium_map(waypoints, fence_waypoint_array)
+        else:
+            generate_folium_map(waypoints, autoBoxWpArray)
     # Load waypoints from CSV file
     waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
 
