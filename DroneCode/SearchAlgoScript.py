@@ -314,7 +314,8 @@ def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
     else:
         print("No mission commands downloaded.")
         print("Using auto generated coordinates.")
-        autoBoxWpArray =  generate_box((vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon),90)
+        autoBoxWpArray =  generate_box((vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon),
+                                       vehicle.heading)
         top_left_corner = (autoBoxWpArray[0][1], autoBoxWpArray[0][2])
         top_right_corner = (autoBoxWpArray[1][1], autoBoxWpArray[1][2])
         bottom_right_corner = (autoBoxWpArray[2][1], autoBoxWpArray[2][2])
