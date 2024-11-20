@@ -245,15 +245,14 @@ def drone_control(enordaCopter):
     print("Returning to Launch")
     enordaCopter.mode = VehicleMode("RTL")
 
-def search_algorithm(marker_queue):
+def search_algorithm(marker_queue, isMarkerFound):
     while True:
         if not marker_queue.empty():
             marker_id = marker_queue.get()
-            data = f"Detected Marker ID: {marker_id}"
-            print(data)
-            comms(data)
             if marker_id == 0:
-                print("Detected Drop Zone marker (ID=0)")
+                isMarkerFound.value = True
+            else:
+                isMarkerFound.value = False
 
 def camera_run(marker_queue):
     camera = Camera()
@@ -263,35 +262,59 @@ def camera_run(marker_queue):
             break
     camera.close()
 
-def comms(data):
-    # Set up the serial connection
-    with Serial(PORT, BAUDRATE, timeout=1) as ser:
-        time.sleep(2)  # Allow time for the connection to establish
-        while True:
-            # Send the JSON string over serial
-            ser.write(data.encode('utf-8'))
-            print(f"Sent: {data}")
-            
-            time.sleep(2)  # Wait before sending the next message
+def comms(ser, isMarkerFound):
+    while True:
+        data = str(getCurrentLocation(enordaCopter)) + str(isMarkerFound.value)
+        # Send the JSON string over serial
+        ser.write(data.encode('utf-8'))
+        print(f"Sent: {data}")
+        
+        time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
-    # enordaCopter = connectMyCopter()
-    marker_queue = multiprocessing.Queue()
+    try:
+        # Try to establish the serial connection
+        print("Waiting for serial connection...")
+        ser = Serial(PORT, BAUDRATE, timeout=1)
+        
+        # Give it some time to establish
+        time.sleep(2)
+        
+        # Check if the serial port is open
+        if ser.is_open:
+            print("Serial connection established successfully.")
+        else:
+            print("Failed to establish serial connection.")
+            ser.close()  # Ensure we close the port if it failed
+            exit(1)
 
-    # drone_process = multiprocessing.Process(target=drone_control, args=(enordaCopter))
-    # drone_process.start()
+        # Connect to the drone
+        enordaCopter = connectMyCopter()
+        marker_queue = multiprocessing.Queue()
+        isMarkerFound = multiprocessing.Value('b', False)
 
-    camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue,))
-    camera_process.start()
+        # Start the camera and search algorithm processes
+        camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue,))
+        camera_process.start()
 
-    search_process = multiprocessing.Process(target=search_algorithm, args=(marker_queue,))
-    search_process.start()
-    
+        search_process = multiprocessing.Process(target=search_algorithm, args=(marker_queue, isMarkerFound))
+        search_process.start()
 
-    # drone_process.join()
-    camera_process.join()
-    search_process.join()
+        # Start the comms process, passing the serial connection
+        comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
+        comms_process.start()
 
-    # Close vehicle object before exiting script
-    print("Close vehicle object")
-    # enordaCopter.close()
+        # Wait for the processes to finish
+        camera_process.join()
+        search_process.join()
+        comms_process.join()
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        # Close serial connection when done
+        if ser.is_open:
+            ser.close()
+        print("Closed serial connection.")
+        print("Close vehicle object")
+        enordaCopter.close()
