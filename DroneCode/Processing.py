@@ -6,6 +6,9 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
+import time
+import json
+from serial import Serial
 
 
 # Set up option parsing to get connection string
@@ -16,6 +19,8 @@ import cv2.aruco as aruco
 import numpy as np
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
+PORT = '/dev/ttyCH341USB0'  # Change to your actual port
+BAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 
 
 class Camera:
@@ -244,7 +249,9 @@ def search_algorithm(marker_queue):
     while True:
         if not marker_queue.empty():
             marker_id = marker_queue.get()
-            print(f"Detected Marker ID: {marker_id}")
+            data = f"Detected Marker ID: {marker_id}"
+            print(data)
+            comms(data)
             if marker_id == 0:
                 print("Detected Drop Zone marker (ID=0)")
 
@@ -255,6 +262,17 @@ def camera_run(marker_queue):
         if cv2.waitKey(1) == ord('q'):
             break
     camera.close()
+
+def comms(data):
+    # Set up the serial connection
+    with Serial(PORT, BAUDRATE, timeout=1) as ser:
+        time.sleep(2)  # Allow time for the connection to establish
+        while True:
+            # Send the JSON string over serial
+            ser.write(data.encode('utf-8'))
+            print(f"Sent: {data}")
+            
+            time.sleep(2)  # Wait before sending the next message
 
 if __name__ == "__main__":
     # enordaCopter = connectMyCopter()
