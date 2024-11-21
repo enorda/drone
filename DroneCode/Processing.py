@@ -25,7 +25,7 @@ USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 PORT = '/dev/ttyCH341USB0'  # Change to your actual port
 BAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 
-logging.basicConfig(filename='my_log.log',   # Name of the log file
+logging.basicConfig(filename='flight.log',   # Name of the log file
                     level=logging.DEBUG,    # Minimum logging level (DEBUG, INFO, etc.)
                     format='%(asctime)s - %(levelname)s - %(message)s')  # Format for log message
 
@@ -154,26 +154,26 @@ def connectMyCopter():
 
     return vehicle
 
-def drone_control(enordaCopter):
-    print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
-    print("Heading: ", enordaCopter.heading)
+def drone_control(vehicle):
+    print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+    print("Heading: ", vehicle.heading)
 
     logging.info("Arming Drone")
-    arm_drone(enordaCopter)
+    arm_drone(vehicle)
 
-    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 
+    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,6,8) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
-    enordaCopter.airspeed = 3
+    vehicle.airspeed = 3
 
     logging.critical("UAV START: TAKING OFF")
     print("Set default/target airspeed to 3")
-    takeoff_drone(enordaCopter, 4)
+    takeoff_drone(vehicle, 4)
 
-    flyInSearchPattern(enordaCopter)
+    flyInSearchPattern(vehicle)
     
     print("Returning to Launch")
-    enordaCopter.mode = VehicleMode("RTL")
+    vehicle.mode = VehicleMode("RTL")
 
 def search_algorithm(marker_queue, isMarkerFound):
     while True:
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
         comms_process.start()
 
-        flight_process = multiprocessing.Process(target=drone_control)
+        flight_process = multiprocessing.Process(target=drone_control, args=(enordaCopter, ))
         flight_process.start()
 
         # Wait for the processes to finish
