@@ -19,10 +19,15 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 
+import logging
+
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 PORT = '/dev/ttyCH341USB0'  # Change to your actual port
 BAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 
+logging.basicConfig(filename='my_log.log',   # Name of the log file
+                    level=logging.DEBUG,    # Minimum logging level (DEBUG, INFO, etc.)
+                    format='%(asctime)s - %(levelname)s - %(message)s')  # Format for log message
 
 class Camera:
     def __init__(self):
@@ -153,6 +158,7 @@ def drone_control(enordaCopter):
     print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
     print("Heading: ", enordaCopter.heading)
 
+    logging.info("Arming Drone")
     arm_drone(enordaCopter)
 
     waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 
@@ -160,6 +166,8 @@ def drone_control(enordaCopter):
     print("Set default/target airspeed to 3")
     enordaCopter.airspeed = 3
 
+    logging.critical("UAV START: TAKING OFF")
+    print("Set default/target airspeed to 3")
     takeoff_drone(enordaCopter, 4)
 
     flyInSearchPattern(enordaCopter)
@@ -190,7 +198,9 @@ def comms(ser, isMarkerFound):
         # Send the JSON string over serial
         ser.write(data.encode('utf-8'))
         print(f"Sent: {data}")
-        
+        logging.critical(f"Sent From Jetson: {data}")
+        if(isMarkerFound.value):
+            logging.critical(f"ArUco Marker Found At {getCurrentLocation(enordaCopter)}")
         time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
@@ -244,3 +254,4 @@ if __name__ == "__main__":
         print("Closed serial connection.")
         print("Close vehicle object")
         enordaCopter.close()
+        logging.critical("UAV END: LANDING")
