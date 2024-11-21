@@ -6,6 +6,7 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
+from DroneSimTest import *
 import time
 import json
 from serial import Serial
@@ -130,13 +131,6 @@ args = parser.parse_args()
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
-cornerCoordinates = [
-    [1, 32.920440673828125, -96.94830322265625],
-    [2, 32.920440673828125, -96.9479751586914],
-    [3, 32.92019271850586, -96.9479751586914],
-    [4, 32.92019271850586, -96.94831085205078]
-]
-
 # Used to connect to copter with args from command line
 def connectMyCopter():
     if SIMULATE_DRONE:
@@ -154,78 +148,6 @@ def connectMyCopter():
         '''
 
     return vehicle
-
-# Used to arm the drone
-def arm_drone(vehicle):
-    while not vehicle.is_armable:  # While the drone hasn't been armed
-        print("Waiting for drone to become armable")
-        time.sleep(1)  # Wait one second before checking if drone is armable
-    print("The drone is now armable")
-
-    vehicle.mode = VehicleMode("GUIDED")
-    while vehicle.mode != 'GUIDED':  # While drone is not in guided mode
-        print("The drone is not in guided mode yet")
-        time.sleep(1)  # Wait one second before checking if drone is in guided mode
-    print("The drone is now in guided mode")
-
-    vehicle.armed = True
-    while not vehicle.armed:  # While the vehicle has not been armed
-        print("Waiting for drone to arm")
-        time.sleep(1)  # Wait one second before checking if drone has been armed
-    print("The drone has now been armed")
-
-    # Check if GPS is functioning
-    while vehicle.gps_0.fix_type < 2:  # Ensure GPS is ready
-        print(" Waiting for GPS to initialise...", vehicle.gps_0.fix_type)
-        time.sleep(1)
-    print("Copter GPS Ready")
-
-# Used to take off the drone to a specific altitude
-def takeoff_drone(vehicle, targetAltitude):
-    print("Taking off!")
-    vehicle.simple_takeoff(targetAltitude)  # Take off to target altitude
-
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
-    # after Vehicle.simple_takeoff will execute immediately).
-    while True:
-        print(" Altitude: ", vehicle.location.global_relative_frame.alt)
-        # Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt >= targetAltitude * 0.95:
-            print("Reached target altitude")
-            break
-        time.sleep(1)
-
-def getCurrentLocation(vehicle):
-    currentLoc = (vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon)
-    return currentLoc
- 
-def flyInSearchPattern(vehicle):
-    search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
-    # Iterate over waypoints, expecting lists of [latitude, longitude]
-    if SIMULATE_DRONE:
-        for wp in search_waypoints:
-            currentWP = (wp.lat, wp.lon)
-            print("Waypoint:", currentWP)
-            # Go to the waypoint
-            vehicle.simple_goto(wp)
-            #time.sleep(20)
-            while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5): 
-            
-                print(f"Current Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
-                print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
-                time.sleep(1)
-    else:
-        for wp in search_waypoints:
-            currentWP = (wp.lat, wp.lon)
-            print("Waypoint:", currentWP)
-            # Go to the waypoint
-            vehicle.simple_goto(wp)
-            #time.sleep(20)
-            while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5): 
-                print(enordaCopter.location.global_relative_frame.alt)
-                print(f"Current Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
-                print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
-                time.sleep(1)
 
 def drone_control(enordaCopter):
     print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
@@ -304,10 +226,14 @@ if __name__ == "__main__":
         comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
         comms_process.start()
 
+        flight_process = multiprocessing.Process(target=drone_control)
+        flight_process.start()
+
         # Wait for the processes to finish
         camera_process.join()
         search_process.join()
         comms_process.join()
+        flight_process.join()
 
     except Exception as e:
         print(f"Error: {e}")
