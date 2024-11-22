@@ -136,26 +136,11 @@ args = parser.parse_args()
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
-# Used to connect to copter with args from command line
-def connectMyCopter():
-    if SIMULATE_DRONE:
-        # Create a SITL drone instance instead of launching one beforehand
-        import dronekit_sitl
-        sitl = dronekit_sitl.start_default(32.92019271850586, -96.94831085205078)
-        connection_string = sitl.connection_string()
-        vehicle = connect(connection_string, wait_ready=True)
-
-    else:
-        vehicle = connect('/dev/ttyACM0', baud=115200, wait_ready=True) 
-        '''
-        This is the connect they were using in 23-24 pqqtest2
-        FIX THIS FOR FLIGHT NOT SURE: https://dronekit.netlify.app/guide/connecting_vehicle.html
-        '''
-
-    return vehicle
-
-def drone_control(vehicle):
+def drone_control():
+    # Connect to the drone
+    vehicle = connectMyCopter()
     print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+    #location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
     print("Heading: ", vehicle.heading)
 
     logging.info("Arming Drone")
@@ -175,6 +160,10 @@ def drone_control(vehicle):
     print("Returning to Launch")
     vehicle.mode = VehicleMode("RTL")
 
+    print("Close vehicle object")
+    vehicle.close()
+    logging.critical("UAV END: LANDING")
+
 def search_algorithm(marker_queue, isMarkerFound):
     while True:
         if not marker_queue.empty():
@@ -192,66 +181,63 @@ def camera_run(marker_queue):
             break
     camera.close()
 
-def comms(ser, isMarkerFound):
+def comms(ser, isMarkerFound, location_queue):
     while True:
-        data = str(getCurrentLocation(enordaCopter)) + str(isMarkerFound.value)
-        # Send the JSON string over serial
-        ser.write(data.encode('utf-8'))
-        print(f"Sent: {data}")
-        logging.critical(f"Sent From Jetson: {data}")
-        if(isMarkerFound.value):
-            logging.critical(f"ArUco Marker Found At {getCurrentLocation(enordaCopter)}")
-        time.sleep(5)  # Wait before sending the next message
+        print("COMMS PROC")
+        if not locationTuple.empty():
+            locationTuple = location_queue.get()
+            data = str(locationTuple) + str(isMarkerFound.value)
+            # Send the JSON string over serial
+            ser.write(data.encode('utf-8'))
+            print(f"Sent: {data}")
+            logging.critical(f"Sent From Jetson: {data}")
+            if(isMarkerFound.value):
+                logging.critical(f"ArUco Marker Found At {locationTuple}")
+            # time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
     try:
-        # Try to establish the serial connection
-        print("Waiting for serial connection...")
-        ser = Serial(PORT, BAUDRATE, timeout=1)
+        # # Try to establish the serial connection
+        # print("Waiting for serial connection...")
+        # ser = Serial(PORT, BAUDRATE, timeout=1)
         
-        # Give it some time to establish
-        time.sleep(2)
+        # # Give it some time to establish
+        # time.sleep(2)
         
-        # Check if the serial port is open
-        if ser.is_open:
-            print("Serial connection established successfully.")
-        else:
-            print("Failed to establish serial connection.")
-            ser.close()  # Ensure we close the port if it failed
-            exit(1)
+        # # Check if the serial port is open
+        # if ser.is_open:
+        #     print("Serial connection established successfully.")
+        # else:
+        #     print("Failed to establish serial connection.")
+        #     ser.close()  # Ensure we close the port if it failed
+        #     exit(1)
 
-        # Connect to the drone
-        enordaCopter = connectMyCopter()
-        marker_queue = multiprocessing.Queue()
-        isMarkerFound = multiprocessing.Value('b', False)
+        
+        # marker_queue = multiprocessing.Queue()
+        # isMarkerFound = multiprocessing.Value('b', False)
 
         # Start the camera and search algorithm processes
-        camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue,))
-        camera_process.start()
+        # camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue,))
+        # camera_process.start()
 
-        search_process = multiprocessing.Process(target=search_algorithm, args=(marker_queue, isMarkerFound))
-        search_process.start()
+        # search_process = multiprocessing.Process(target=search_algorithm, args=(marker_queue, isMarkerFound))
+        # search_process.start()
 
-        # Start the comms process, passing the serial connection
-        comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
-        comms_process.start()
+        # # Start the comms process, passing the serial connection
+        # comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
+        # comms_process.start()
 
-        flight_process = multiprocessing.Process(target=drone_control, args=(enordaCopter, ))
+        flight_process = multiprocessing.Process(target=drone_control)
         flight_process.start()
 
         # Wait for the processes to finish
-        camera_process.join()
-        search_process.join()
-        comms_process.join()
+        # camera_process.join()
+        # search_process.join()
+        # comms_process.join()
         flight_process.join()
 
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        # Close serial connection when done
-        if ser.is_open:
-            ser.close()
         print("Closed serial connection.")
-        print("Close vehicle object")
-        enordaCopter.close()
-        logging.critical("UAV END: LANDING")
+        
