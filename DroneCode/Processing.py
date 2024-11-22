@@ -24,8 +24,9 @@ logging.basicConfig(filename='flight.log',   # Name of the log file
                     format='%(asctime)s - %(levelname)s - %(message)s')  # Format for log message
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
-PORT = '/dev/ttyCH341USB0'  # Change to your actual port
-BAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
+
+espPORT = '/dev/ttyCH341USB0'  # Change to your actual port
+espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 
 
 class Camera:
@@ -198,7 +199,7 @@ if __name__ == "__main__":
     try:
         # Try to establish the serial connection
         print("Waiting for serial connection...")
-        ser = Serial(PORT, BAUDRATE, timeout=1)
+        ser = Serial(espPORT, espBAUDRATE, timeout=1)
         
         # Give it some time to establish
         time.sleep(2)
