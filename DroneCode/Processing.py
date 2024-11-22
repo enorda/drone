@@ -135,11 +135,11 @@ args = parser.parse_args()
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
-def drone_control():
+def drone_control(location_queue):
     # Connect to the drone
     vehicle = connectMyCopter()
     print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
-    #location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
+    location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
     print("Heading: ", vehicle.heading)
 
     logging.info("Arming Drone")
@@ -154,7 +154,7 @@ def drone_control():
     print("Set default/target airspeed to 3")
     takeoff_drone(vehicle, 4)
 
-    flyInSearchPattern(vehicle)
+    flyInSearchPattern(vehicle, location_queue)
     
     print("Returning to Launch")
     vehicle.mode = VehicleMode("RTL")
@@ -180,14 +180,19 @@ def camera_run(marker_queue):
             break
     camera.close()
 
-def comms(ser, isMarkerFound):
+def comms(ser, isMarkerFound, location_queue):
     while True:
-        data = str(getCurrentLocation(enordaCopter)) + str(isMarkerFound.value)
-        # Send the JSON string over serial
-        ser.write(data.encode('utf-8'))
-        print(f"Sent: {data}")
-        
-        time.sleep(5)  # Wait before sending the next message
+        print("COMMS PROC")
+        if not locationTuple.empty():
+            locationTuple = location_queue.get()
+            data = str(locationTuple) + str(isMarkerFound.value)
+            # Send the JSON string over serial
+            ser.write(data.encode('utf-8'))
+            print(f"Sent: {data}")
+            logging.critical(f"Sent From Jetson: {data}")
+            if(isMarkerFound.value):
+                logging.critical(f"ArUco Marker Found At {locationTuple}")
+            # time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
     try:
@@ -209,6 +214,7 @@ if __name__ == "__main__":
         # Connect to the drone
         enordaCopter = connectMyCopter()
         marker_queue = multiprocessing.Queue()
+        location_queue = multiprocessing.Queue()
         isMarkerFound = multiprocessing.Value('b', False)
 
         # Start the camera and search algorithm processes
@@ -223,7 +229,7 @@ if __name__ == "__main__":
         comms_process.start()
 
         # Start the flight process
-        flight_process = multiprocessing.Process(target=drone_control)
+        flight_process = multiprocessing.Process(target=drone_control, args=(location_queue,))
         flight_process.start()
 
         # Wait for the processes to finish
