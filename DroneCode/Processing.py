@@ -183,8 +183,7 @@ def camera_run(marker_queue):
 
 def comms(ser, isMarkerFound, location_queue):
     while True:
-        print("COMMS PROC")
-        if not locationTuple.empty():
+        if not location_queue.empty():
             locationTuple = location_queue.get()
             data = str(locationTuple) + str(isMarkerFound.value)
             # Send the JSON string over serial
@@ -226,7 +225,7 @@ if __name__ == "__main__":
         search_process.start()
 
         # Start the comms process, passing the serial connection
-        comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound))
+        comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound, location_queue))
         comms_process.start()
 
         # Start the flight process
