@@ -88,12 +88,12 @@ def get_detected_markers(frame, camera: Camera = None):
             corner = corners[i][0]
 
             if marker_id == 0:
-                color = (0,255,0)
+                color = (0, 255, 0)
                 zone_label = "Drop Zone"
             else:
-                color = (0,0,255)
+                color = (0, 0, 255)
                 zone_label = "Non-Drop Zone"
-            
+
             cv2.polylines(frame, [corner.astype(int)], isClosed=True, color=color, thickness=3)
             zone_label_position = np.mean(corner, axis=0).astype(int)
             cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
@@ -115,8 +115,26 @@ def get_detected_markers(frame, camera: Camera = None):
 
 if __name__ == "__main__":
     camera = Camera()
+
+    # Initialize VideoWriter
+    frame_width = 1000
+    frame_height = 720
+    fps = 30
+    output_filename = "output.avi"
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
+    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+    
+
     while True:
-        marker_list = get_detected_markers(camera.getFrame(), camera)
+        frame = camera.getFrame()
+        if frame is None:
+            break
+        frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
+        marker_list = get_detected_markers(frame, camera)
+        video_writer.write(frame)  # Write the frame to the output file
         if cv2.waitKey(1) == ord('q'):
             break
+
     camera.close()
+    video_writer.release()  # Ensure the video file is properly closed
+    print(f"Video saved to {output_filename}")

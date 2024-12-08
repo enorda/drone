@@ -175,11 +175,14 @@ def search_algorithm(marker_queue, isMarkerFound):
 
 def camera_run(marker_queue):
     camera = Camera()
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
+    video_writer = cv2.VideoWriter("output.avi", fourcc, 30, (1000,720))
     while True:
         get_detected_markers(camera.getFrame(), marker_queue, camera)
         if cv2.waitKey(1) == ord('q'):
             break
     camera.close()
+    video_writer.release()  # Ensure the video file is properly closed
 
 def comms(ser, isMarkerFound, location_queue):
     while True:
