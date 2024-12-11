@@ -146,7 +146,8 @@ def drone_control(location_queue):
     logging.info("Arming Drone")
     arm_drone(vehicle)
 
-    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,6,8) #6 and 8 are rough numbers for testing 
+    # Outputs waypoints to csv
+    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,6,8) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
     vehicle.airspeed = 3
@@ -155,6 +156,7 @@ def drone_control(location_queue):
     print("Set default/target airspeed to 3")
     takeoff_drone(vehicle, 4)
 
+    # Consumes waypoints in csv, and goes to those locations
     flyInSearchPattern(vehicle, location_queue)
     
     print("Returning to Launch")
