@@ -23,15 +23,15 @@ class Camera:
                 return None
 
         else:
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
             if not self.cap.isOpened():
                 print("Error opening the camera")
                 return None
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)  # Adjust this as needed
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)  # Adjust this as needed
+            # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
         cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("Camera Feed", 1000, 720)
+        # cv2.resizeWindow("Camera Feed", 1000, 720)
         print("Camera initialized")
 
     def getFrame(self):
@@ -115,8 +115,24 @@ def get_detected_markers(frame, camera: Camera = None):
 
 if __name__ == "__main__":
     camera = Camera()
-    while True:
-        marker_list = get_detected_markers(camera.getFrame(), camera)
+    frame_width = int(camera.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(camera.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(camera.cap.get(cv2.CAP_PROP_FPS))
+
+    # Initialize VideoWriter
+    fps = 30
+    output_filename = "output.avi"
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # Codec for AVI file
+    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+    
+
+    while True:  
+        frame = camera.getFrame()
+        if frame is None:
+            break
+        frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
+        marker_list = get_detected_markers(frame, camera)
+        video_writer.write(frame)  # Write the frame to the output file
         if cv2.waitKey(1) == ord('q'):
             break
     camera.close()
