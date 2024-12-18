@@ -149,7 +149,7 @@ The drone is not in guided mode yet
 
 5. Take 10 photos at least using the camera you intend on using of the [chess aruco board on paper](https://github.com/opencv/opencv/blob/master/doc/pattern.png). Upload them into the CameraCalibration/CalibrationImages directory.
 
-> **NOTE:**  Make sure to take the photos at same frame size (eg. 1280,720) for what you are using for the opencv frame. The discrepency will cause issues for pose estimation later on with estimating distance on axis. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution manually)
+> **NOTE:**  Make sure to take the photos at same frame size (eg. 1280,720) for what you are using for the opencv frame. The discrepency will cause issues for pose estimation later on with estimating distance on axis. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
 
 6. Measure the square length, in my case I measured 2.5cm or .025m.
 
@@ -202,14 +202,17 @@ The drone is not in guided mode yet
 
 - [ArduPilot Docs](https://ardupilot.org/dev/index.html)
 
+- [SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
+
+- [dronekit-sitl](https://github.com/dronekit/dronekit-sitl)
+
+- [pyMavlink docs](https://mavlink.io/en/mavgen_python/)
+
 - [Mission Planner](https://ardupilot.org/planner/docs/mission-planner-installation.html)
 
 - [Zed Api Docs](https://www.stereolabs.com/docs)
 
 - [ArUco Docs](https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html)
 
-- [SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
+- [ArUco Pose Estimation](https://automaticaddison.com/how-to-perform-pose-estimation-using-an-aruco-marker/)
 
-- [dronekit-sitl](https://github.com/dronekit/dronekit-sitl)
-
-- [pyMavlink docs](https://mavlink.io/en/mavgen_python/)
