@@ -47,7 +47,7 @@ class Camera:
                 return None
 
         else:
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
             if not self.cap.isOpened():
                 print("Error opening the camera")
                 return None
@@ -216,11 +216,14 @@ if __name__ == "__main__":
             ser.close()  # Ensure we close the port if it failed
             exit(1)
 
-        # Connect to the drone
-        enordaCopter = connectMyCopter()
         marker_queue = multiprocessing.Queue()
         location_queue = multiprocessing.Queue()
         isMarkerFound = multiprocessing.Value('b', False)
+
+
+        # Start the flight process
+        flight_process = multiprocessing.Process(target=drone_control, args=(location_queue,))
+        flight_process.start()
 
         # Start the camera and search algorithm processes
         camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue,))
@@ -233,9 +236,7 @@ if __name__ == "__main__":
         comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound, location_queue))
         comms_process.start()
 
-        # Start the flight process
-        flight_process = multiprocessing.Process(target=drone_control, args=(location_queue,))
-        flight_process.start()
+
 
         # Wait for the processes to finish
         camera_process.join()
