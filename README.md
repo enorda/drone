@@ -149,7 +149,7 @@ The drone is not in guided mode yet
 
 5. Take 10 photos at least using the camera you intend on using of the [chess aruco board on paper](https://github.com/opencv/opencv/blob/master/doc/pattern.png). Upload them into the CameraCalibration/CalibrationImages directory.
 
-> **NOTE:**  Make sure to take the photos at same frame size (eg. 1280,720) for what you are using for the opencv frame. The discrepency will cause issues for pose estimation later on with estimating distance on axis. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
+> **NOTE:**  Make sure to take the photos at same resolution/frame size (eg. 1280,720) as what is going to be used when processing the images. The discrepency will cause issues for pose estimation later on with estimating axis distances. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
 
 6. Measure the square length, in my case I measured 2.5cm or .025m.
 
