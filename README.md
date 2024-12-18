@@ -141,11 +141,30 @@ The drone is not in guided mode yet
 
 1. To use the Zed Camera you will need the Zed SDK (this is already on the jetson, however if you want to run and test with that specific camera on a personal computer you will need this)
 
-2. Use a 6x6 ArUco marker to test 
+2. Use a 6x6 ArUco marker to test
+
+3. Once cameratest.py is running we can now calibrate camera for pose estimation
+
+4. Navigate to /drone/CameraCalibration directory
+
+5. Take 10 photos at least using the camera you intend on using of the [chess aruco board on paper](https://github.com/opencv/opencv/blob/master/doc/pattern.png). Upload them into the CameraCalibration/CalibrationImages directory.
+
+> **NOTE:**  Make sure to take the photos at same frame size (eg. 1280,720) for what you are using for the opencv frame. The discrepency will cause issues for pose estimation later on with estimating distance on axis. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
+
+6. Measure the square length, in my case I measured 2.5cm or .025m.
+
+7. Go to calibration.py and change the variable ```square_size``` to what you have measured
+
+8. Run calibration.py, it should generate calibration_chessboard.yaml. Once generated as long as the calibration parameters are accurate you don't need to change them for that specific camera that you have taken/uploaded the images with.
+
+9. Now you can run pose_estimator.py to see how the camera position compared to static aruco is generated.
+
 
 <h3>Resources</h3>
 
 - [ArUco Docs](https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html)
+
+- [ArUco Pose Estimation](https://automaticaddison.com/how-to-perform-pose-estimation-using-an-aruco-marker/)
 
 - [Zed Api Docs](https://www.stereolabs.com/docs)
 
@@ -183,14 +202,17 @@ The drone is not in guided mode yet
 
 - [ArduPilot Docs](https://ardupilot.org/dev/index.html)
 
+- [SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
+
+- [dronekit-sitl](https://github.com/dronekit/dronekit-sitl)
+
+- [pyMavlink docs](https://mavlink.io/en/mavgen_python/)
+
 - [Mission Planner](https://ardupilot.org/planner/docs/mission-planner-installation.html)
 
 - [Zed Api Docs](https://www.stereolabs.com/docs)
 
 - [ArUco Docs](https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html)
 
-- [SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html)
+- [ArUco Pose Estimation](https://automaticaddison.com/how-to-perform-pose-estimation-using-an-aruco-marker/)
 
-- [dronekit-sitl](https://github.com/dronekit/dronekit-sitl)
-
-- [pyMavlink docs](https://mavlink.io/en/mavgen_python/)
