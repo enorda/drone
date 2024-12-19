@@ -119,18 +119,18 @@ if __name__ == "__main__":
     try:
         # Try to establish the serial connection
         print("Waiting for serial connection...")
-        # ser = Serial(espPORT, espBAUDRATE, timeout=1)
+        ser = Serial(espPORT, espBAUDRATE, timeout=1)
         
         # Give it some time to establish
         time.sleep(2)
         
         # Check if the serial port is open
-        # if ser.is_open:
-        #     print("Serial connection established successfully.")
-        # else:
-        #     print("Failed to establish serial connection.")
-        #     ser.close()  # Ensure we close the port if it failed
-        #     exit(1)
+        if ser.is_open:
+            print("Serial connection established successfully.")
+        else:
+            print("Failed to establish serial connection.")
+            ser.close()  # Ensure we close the port if it failed
+            exit(1)
 
         marker_queue = multiprocessing.Queue()
         location_queue = multiprocessing.Queue()
