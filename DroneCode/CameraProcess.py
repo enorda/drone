@@ -1,6 +1,7 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+from math import sqrt, tan, radians
 
 CALIBRATION_FILE_PATH = "..\CameraCalibration\calibration_chessboard.yaml"  # Path to your calibration file
 MARKER_SIZE = 0.1  # Marker size in meters
@@ -88,7 +89,6 @@ def load_calibration(file_path):
         raise ValueError("Calibration file is missing required data")
     return camera_matrix, dist_coeffs
 
-
 def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id):
     """
     Detects ArUco markers and computes the camera's position relative to the markers.
@@ -136,8 +136,6 @@ def display_camera_position(frame, camera_relative_position):
         text_position = (10, 30)  # Top-left corner
         cv2.putText(frame, distance_info, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
 
-
-
 def label_marker(frame, corner, marker_id, tvec):
     color = (0, 255, 0) if marker_id == 0 else (0, 0, 255)
     zone_label = "Drop Zone" if marker_id == 0 else "Non-Drop Zone"
@@ -148,7 +146,38 @@ def label_marker(frame, corner, marker_id, tvec):
     cv2.putText(frame, f"ID: {marker_id}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
 
+def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
+    """
+    Calculates the Ground Sampling Distance (GSD) in meters per pixel for the ZED camera, then calculates the
+    width and height of the image in meters.
 
+    Parameters:
+    - dimensions: Tuple of (height, width) for the image in pixels.
+    - camera_matrix: Camera matrix for the ZED camera.
+
+    Returns:
+    - Tuple of (width, height) for the image in meters.
+    """
+
+    STANDARD_SENSOR_SIZE = 35  # mm
+    fov_vert = 70  # degrees
+    fov_horizontal = 110  # degrees
+    frame_width = dimensions[1]
+    frame_height = dimensions[0]
+    sensor_width = 4.8e-3  # sensor width in meters
+    sensor_height = 3.6e-3  # focal length in meters
+    sensor_size = sqrt(sensor_width ** 2 + sensor_height ** 2)
+
+    focal_length = (camera_matrix[0][0] * sensor_width) / frame_width
+
+    magnification = (STANDARD_SENSOR_SIZE / sensor_size) * (focal_length / 43.26661531)
+
+    magnification = 0.45
+
+    frame_height = frame_altitude * tan(radians(fov_vert / 2.0)) * 2.0 * magnification
+    frame_width = frame_altitude * tan(radians(fov_horizontal / 2.0)) * 2.0 * magnification
+
+    return frame_width, frame_height
 # def main():
 #     camera = Camera()
 #     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)

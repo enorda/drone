@@ -9,7 +9,7 @@ from SearchAlgoScript import *
 from DroneSimTest import *
 import time
 import json
-# from serial import Serial
+from serial import Serial
 from CameraProcess import *
 
 # Set up option parsing to get connection string
@@ -19,14 +19,33 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 
-logging.basicConfig(filename='flight.log',   # Name of the log file
-                    level=logging.DEBUG,    # Minimum logging level (DEBUG, INFO, etc.)
-                    format='%(asctime)s - %(levelname)s - %(message)s')  # Format for log message
+#LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
+AVC_LOG = 25  # Pick a value that does not clash with existing levels
+logging.addLevelName(AVC_LOG, "AVC")
+def log_avc(self, message, *args, **kwargs):
+    if self.isEnabledFor(AVC_LOG):
+        self._log(AVC_LOG, message, args, **kwargs)
+logging.Logger.avc = log_avc
+class CustomLevelFilter(logging.Filter):
+    def filter(self, record):
+        return record.levelno == AVC_LOG
+
+logging.basicConfig(
+    filename='flight.log',
+    level=AVC_LOG,  # Set to the custom level
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+root_logger = logging.getLogger()
+for handler in root_logger.handlers:
+    handler.addFilter(CustomLevelFilter())
+logger = logging.getLogger("FlightLogger")
+
 
 USING_ZED_CAMERA = False  # Set to True if using the ZED camera, False otherwise
 espPORT = '/dev/ttyCH341USB0'  # Change to your actual port
 espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
-
+frame_width = 1280
+frame_height = 720
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
@@ -36,50 +55,58 @@ args = parser.parse_args()
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
 
-def drone_control(location_queue):
+def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     # Connect to the drone
     vehicle = connectMyCopter()
+
+    camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
+    if(USING_ZED_CAMERA):
+        camera_frame_width, camera_frame_height = get_image_dimensions_meters((frame_width,frame_height), camera_matrix,
+                                                                                                ALTITUDE)
+    else:
+        camera_frame_width, camera_frame_height = 5,3
+    print(f"W:{camera_frame_width}H:{camera_frame_height}")
+
     print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
     location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
     print("Heading: ", vehicle.heading)
 
-    logging.info("Arming Drone")
+    logger.avc("Arming Drone")
     arm_drone(vehicle)
 
     # Outputs waypoints to csv
-    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,6,8) #6 and 8 are rough numbers for testing 
+    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,camera_frame_width,camera_frame_height) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
     vehicle.airspeed = 3
 
-    logging.critical("UAV START: TAKING OFF")
+    logger.avc("UAV START: TAKING OFF")
     print("Set default/target airspeed to 3")
-    takeoff_drone(vehicle, 4)
+    takeoff_drone(vehicle, ALTITUDE)
 
     # Consumes waypoints in csv, and goes to those locations
-    flyInSearchPattern(vehicle, location_queue)
+    flyInSearchPattern(vehicle, location_queue, isMarkerFound, distance_to_marker_queue)
     
     print("Returning to Launch")
     vehicle.mode = VehicleMode("RTL")
 
     print("Close vehicle object")
     vehicle.close()
-    logging.critical("UAV END: LANDING")
+    logger.avc("UAV END: LANDING")
 
 def search_algorithm(marker_queue, isMarkerFound):
     while True:
         if not marker_queue.empty():
             marker_id = marker_queue.get()
             if marker_id == 0:
-                isMarkerFound.value = True
-            else:
-                isMarkerFound.value = False
+                with isMarkerFound.get_lock(): #Thread safe operation
+                    isMarkerFound.value = True
+            # else:
+            #     with isMarkerFound.get_lock(): #Thread safe operation
+            #         isMarkerFound.value = False
 
 def camera_run(marker_queue, distance_to_marker_queue):
     camera = Camera(USING_ZED_CAMERA)
-    frame_width = 1280
-    frame_height = 720
-    fps = 30
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     
     while True:
@@ -110,9 +137,9 @@ def comms(ser, isMarkerFound, location_queue):
             # Send the JSON string over serial
             ser.write(data.encode('utf-8'))
             print(f"Sent: {data}")
-            logging.critical(f"Sent From Jetson: {data}")
+            logger.avc(f"Sent From Jetson: {data}")
             if(isMarkerFound.value):
-                logging.critical(f"ArUco Marker Found At {locationTuple}")
+                logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
             # time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
@@ -139,7 +166,7 @@ if __name__ == "__main__":
 
 
         # Start the flight process
-        flight_process = multiprocessing.Process(target=drone_control, args=(location_queue,))
+        flight_process = multiprocessing.Process(target=drone_control, args=(location_queue, isMarkerFound, distance_to_marker_queue))
         flight_process.start()
 
         # Start the camera and search algorithm processes
