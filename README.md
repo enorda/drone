@@ -9,11 +9,15 @@
 To gain full understanding of the code/repository **PLEASE FOLLOW 
 THE STEPS IN ORDER**
 
-Please read the documentation fully and thoroughly (your questions will probably be answered later in the documentation). Good Luck :smiley:
+Please read the documentation fully and thoroughly (your questions will probably be answered later in the documentation). Good Luck and feel free to reach out to past CS team on discord. :smiley:
 
-This repository needs a lot of testing and optimization. As of 1/24/25 the changes from the bringMainUpToDate branch have not been tested on the actual drone and should be tested on sim to understand behavior first, and should be fixed if need be. 
+This repository needs a lot of testing and optimization. As of 1/24/25 the HOMING changes from the bringMainUpToDate branch have not been tested on the actual drone and should be tested on sim to understand behavior first, and should be fixed if need be, once confident add the update the live drone behavior in the flyInSearchPattern function in DroneProcess.py under the else block for the live drone. 
 
-Also we dont know if sim works for mac :frowning_face:
+Known Issues:
+- Homing is untested (has only been tested on sim with a camera)
+- Starting and stopping all processes are unsynchronized so will need to fix that and make sure the processes are spun up in order so that the drone doesn't start flying before all the other processes are running. We also need a graceful exit.
+- OpenCV functionality is not able to track fast enough likely due to motion blur, fps, resolution, or some combination. 
+- Code is pretty ugly, we tried our best :frowning_face:
 
 </p>
 

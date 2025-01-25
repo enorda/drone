@@ -85,11 +85,10 @@ def getCurrentLocation(vehicle):
 def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance_to_marker_queue):
     searchAttempts = 0
     search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
-    # Iterate over waypoints, expecting lists of [latitude, longitude]
     if SIMULATE_DRONE:
         while(searchAttempts < 2): #number of full start search attempts 
             lastKnownMarkerLoc = None
-            for wp in search_waypoints:
+            for wp in search_waypoints:    
                 currentWP = (wp.lat, wp.lon)
                 print("Waypoint:", currentWP)
                 # Go to the waypoint
