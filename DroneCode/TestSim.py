@@ -1,6 +1,5 @@
 from __future__ import print_function
 import time
-import logging
 from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
 
 import csv
@@ -15,27 +14,6 @@ import argparse
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
 args = parser.parse_args()
-
-logger = logging.getLogger('drone_logger')
-logger.setLevel(logging.DEBUG)
-
-# Create a file handler to log to a file
-file_handler = logging.FileHandler('script.log')
-file_handler.setLevel(logging.DEBUG)
-
-# Create a console handler to log to the terminal
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-
-# Create a formatter and set it for both handlers
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Add the handlers to the logger
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
 
 # Set SIMULATE_DRONE based on the --livedrone flag
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
@@ -143,15 +121,13 @@ enordaCopter = connectMyCopter()
 print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
 print("Heading: ", enordaCopter.heading)
 
-logging.critical("ARMING DRONE")
 arm_drone(enordaCopter)
 
-waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,6,8) #6 and 8 are rough numbers for testing 
+waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(enordaCopter,0,6,8) #6 and 8 are rough numbers for testing 
 
 print("Set default/target airspeed to 3")
 enordaCopter.airspeed = 3
 
-logging.critical("TAKE OFF")
 takeoff_drone(enordaCopter, 4)
 
 flyInSearchPattern(enordaCopter)

@@ -132,9 +132,6 @@ def label_marker(frame, corner, marker_id, tvec):
     cv2.putText(frame, f"ID: {marker_id}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
 
-    distance_text = f"Fwd: {tvec[2]:.2f} m, Side: {tvec[0]:.2f} m"
-    cv2.putText(frame, distance_text, (zone_label_position[0], zone_label_position[1] + 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2, cv2.LINE_AA)
 
 
 def main():
