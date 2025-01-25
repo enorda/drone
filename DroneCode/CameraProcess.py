@@ -8,12 +8,14 @@ MARKER_SIZE = 0.1  # Marker size in meters
 
 
 class Camera:
-    def __init__(self, using_zed_camera):
+    def __init__(self, using_zed_camera, frame_width, frame_height):
         """
         Initializes the camera based on the provided parameter.
         :param using_zed_camera: Boolean indicating whether to use the ZED camera.
         """
         self.using_zed_camera = using_zed_camera
+        self.frame_width = frame_width
+        self.frame_height = frame_height
         print("Initializing camera...")
 
         if self.using_zed_camera:
@@ -28,7 +30,7 @@ class Camera:
         import pyzed.sl as sl
         self.zed = sl.Camera()
         self.init = sl.InitParameters()
-        self.init.camera_resolution = sl.RESOLUTION.HD1080
+        self.init.camera_resolution = sl.RESOLUTION.HD1080 #Likely will need to change resolution to get better framerate
         self.init.depth_mode = sl.DEPTH_MODE.NONE
         self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)
         self.status = self.zed.open(self.init)
@@ -39,8 +41,8 @@ class Camera:
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         if not self.cap.isOpened():
             raise RuntimeError("Error opening the standard camera")
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
 
     def get_frame(self):
         """
@@ -178,41 +180,3 @@ def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     frame_width = frame_altitude * tan(radians(fov_horizontal / 2.0)) * 2.0 * magnification
 
     return frame_width, frame_height
-# def main():
-#     camera = Camera()
-#     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
-#     frame_width = 1280
-#     frame_height = 720
-#     fps = 30
-#     output_filename = "output.avi"
-
-#     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#     video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
-
-#     try:
-#         while True:
-#             frame = camera.get_frame()
-#             if frame is None:
-#                 break
-
-#             # Detect markers and get camera positions
-#             camera_positions, processed_frame = detect_markers(frame, camera_matrix, dist_coeffs, 0)
-
-#             # Display camera positions in the corner of the window
-#             display_camera_positions(processed_frame, camera_positions)
-
-#             # Write frame to video and show it
-#             video_writer.write(processed_frame)
-#             cv2.imshow("Camera Feed", processed_frame)
-
-#             if cv2.waitKey(1) == ord('q'):
-#                 break
-
-#     finally:
-#         camera.close()
-#         video_writer.release()
-#         print(f"Video saved to {output_filename}")
-
-
-# if __name__ == "__main__":
-#     main()
