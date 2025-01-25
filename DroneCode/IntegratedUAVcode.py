@@ -6,7 +6,7 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
-from DroneSimTest import *
+from DroneCode.DroneProcess import *
 import time
 import json
 from serial import Serial
@@ -61,11 +61,11 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
 
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     if(USING_ZED_CAMERA):
-        camera_frame_width, camera_frame_height = get_image_dimensions_meters((frame_width,frame_height), camera_matrix,
+        ground_coverage_width, ground_coverage_height = get_image_dimensions_meters((frame_width,frame_height), camera_matrix,
                                                                                                 ALTITUDE)
     else:
-        camera_frame_width, camera_frame_height = 5,3
-    print(f"W:{camera_frame_width}H:{camera_frame_height}")
+        ground_coverage_width, ground_coverage_height = 5,3
+    print(f"W:{ground_coverage_width}H:{ground_coverage_height}")
 
     print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
     location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
@@ -75,7 +75,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     arm_drone(vehicle)
 
     # Outputs waypoints to csv
-    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,camera_frame_width,camera_frame_height) #6 and 8 are rough numbers for testing 
+    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,ground_coverage_width,ground_coverage_height) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
     vehicle.airspeed = 3
@@ -99,14 +99,14 @@ def search_algorithm(marker_queue, isMarkerFound):
         if not marker_queue.empty():
             marker_id = marker_queue.get()
             if marker_id == 0:
-                with isMarkerFound.get_lock(): #Thread safe operation
+                with isMarkerFound.get_lock():
                     isMarkerFound.value = True
-            # else:
-            #     with isMarkerFound.get_lock(): #Thread safe operation
-            #         isMarkerFound.value = False
+            else:
+                with isMarkerFound.get_lock():
+                    isMarkerFound.value = False
 
 def camera_run(marker_queue, distance_to_marker_queue):
-    camera = Camera(USING_ZED_CAMERA)
+    camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     
     while True:
@@ -134,7 +134,6 @@ def comms(ser, isMarkerFound, location_queue):
         if not location_queue.empty():
             locationTuple = location_queue.get()
             data = str(locationTuple) + str(isMarkerFound.value)
-            # Send the JSON string over serial
             ser.write(data.encode('utf-8'))
             print(f"Sent: {data}")
             logger.avc(f"Sent From Jetson: {data}")
@@ -143,6 +142,7 @@ def comms(ser, isMarkerFound, location_queue):
             # time.sleep(5)  # Wait before sending the next message
 
 if __name__ == "__main__":
+    #TODO: need to make a graceful start and exit
     try:
         # Try to establish the serial connection
         print("Waiting for serial connection...")
@@ -179,9 +179,7 @@ if __name__ == "__main__":
         # Start the comms process, passing the serial connection
         comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound, location_queue))
         comms_process.start()
-
-
-
+        
         # Wait for the processes to finish
         camera_process.join()
         search_process.join()

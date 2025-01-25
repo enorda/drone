@@ -6,7 +6,7 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
-from DroneSimTest import *
+from DroneCode.DroneProcess import *
 import time
 import json
 from serial import Serial
