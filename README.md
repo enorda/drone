@@ -9,13 +9,19 @@
 To gain full understanding of the code/repository **PLEASE FOLLOW 
 THE STEPS IN ORDER**
 
-Please read the documentation fully and thoroughly (your questions will probably be answered later in the documentation) before you ask for help, this project is research heavy you will spend hours on forums and outdated documentation especially for things regarding drone and ground vehicle movement and commands. Good Luck :smiley:
+Please read the documentation fully and thoroughly (your questions will probably be answered later in the documentation). Good Luck and feel free to reach out to past CS team on discord. :smiley:
 
-Also we dont know if sim works for mac :frowning_face:
+This repository needs a lot of testing and optimization. As of 1/24/25 the HOMING changes from the bringMainUpToDate branch have not been tested on the actual drone and should be tested on sim to understand behavior first, and should be fixed if need be, once confident add the update the live drone behavior in the flyInSearchPattern function in DroneProcess.py under the else block for the live drone. 
+
+Known Issues:
+- Homing is untested (has only been tested on sim with a camera).
+- Recording OpenCV window is slow but best we can do for right now recording.Full screen is even slower. Functionality is uncommited saved on jetson and updates are not in GitHub so be sure to find it and save the file if you want to keep the functionality before overwriting it when pulling in new changes.
+- Starting and stopping all processes are unsynchronized so will need to fix that and make sure the processes are spun up in order so that the drone doesn't start flying before all the other processes are running. We also need a graceful exit.
+- OpenCV functionality is not able to track fast enough likely due to motion blur, fps, resolution, or some combination. 
+- Code is pretty ugly, we tried our best :frowning_face:
 
 </p>
 
-<h2> Drone/Jetson</h2>
 
 <h2> SITL Simulation</h2>
 
@@ -37,14 +43,14 @@ This can be used to simulate both the drone and ground vehicle through arducopte
 
 2. Install [Mission Planner](https://ardupilot.org/planner/docs/mission-planner-installation.html) 
 
-3. Navigate to DroneCode folder and try to run ```DroneSimTest.py```
+3. Navigate to DroneCode folder and try to run ```TestSim.py```
 
 > - If you see the following issue: 
 
 ```
-PS C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode> python DroneSimTest.py
+PS C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode> python TestSim.py
 Traceback (most recent call last):
-  File "C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode\DroneSimTest.py", line 4, in <module>
+  File "C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode\TestSim.py", line 4, in <module>
     from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
   File "C:\Users\rushi\AppData\Local\Programs\Python\Python313\Lib\site-packages\dronekit\__init__.py", line 2689, in <module>
     class Parameters(collections.MutableMapping, HasObservers):
@@ -55,10 +61,10 @@ AttributeError: module 'collections' has no attribute 'MutableMapping'
 > - Change ```collections.MutableMapping``` to ```collections.abc.MutableMapping```
 > - For further information regarding fix: https://github.com/dronekit/dronekit-python/issues/1132
 
-5. Once you are able to run DroneSimTest.py successfully, you should see an output similar to the following where you should see "The drone is not in guided mode yet" repeating after some time.
+5. Once you are able to run TestSim.py successfully, you should see an output similar to the following where you should see "The drone is not in guided mode yet" repeating after some time.
 
 ```
-PS C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode> python DroneSimTest.py
+PS C:\Users\rushi\OneDrive\Desktop\School\CS4485\drone\DroneCode> python TestSim.py
 Starting copter simulator (SITL)
 SITL already Downloaded and Extracted.
 Ready to boot.
@@ -87,7 +93,7 @@ The drone is not in guided mode yet
 
 <h3>Running Simulation:</h3>
 
-1. Open Mission Planner & have DroneSimTest.py running
+1. Open Mission Planner & have TestSim.py running
 
 2. Click Connect on Top Right Corner on Mission Planner (set connection type to tcp and make sure baudrate (number to the right of it) is set to 115200)
 
@@ -101,7 +107,7 @@ The drone is not in guided mode yet
 
 <h3> SITL continued:</h3>
 
-7. If simulation is still running terminate the DroneSimTest.py program and restart it. 
+7. If simulation is still running terminate the TestSim.py program and restart it. 
 
 8. Connect Mission Planner to sim as before and go to the Plan tab on the top left navigation panel
 
@@ -149,7 +155,7 @@ The drone is not in guided mode yet
 
 5. Take 10 photos at least using the camera you intend on using of the [chess aruco board on paper](https://github.com/opencv/opencv/blob/master/doc/pattern.png). Upload them into the CameraCalibration/CalibrationImages directory.
 
-> **NOTE:**  Make sure to take the photos at same frame size (eg. 1280,720) for what you are using for the opencv frame. The discrepency will cause issues for pose estimation later on with estimating distance on axis. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
+> **NOTE:**  Make sure to take the photos at same resolution/frame size (eg. 1280,720) as what is going to be used when processing the images. The discrepency will cause issues for pose estimation later on with estimating axis distances. (You can probably implement some logic to easily do this using cv2.resize() if you can only take photos at 1 frame size or edit the resolution of the pictures manually)
 
 6. Measure the square length, in my case I measured 2.5cm or .025m.
 

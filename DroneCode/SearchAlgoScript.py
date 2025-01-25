@@ -277,7 +277,7 @@ def load_waypoints_from_csv(file_path):
             csv_loaded_waypoints.append(LocationGlobalRelative(latitude, longitude, altitude))
     return csv_loaded_waypoints
 
-def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
+def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meters):
     # Wait for the vehicle to have a GPS fix
     fence_waypoint_array = []
     while not vehicle.gps_0.fix_type:
@@ -315,7 +315,7 @@ def run_path_generation(vehicle, frame_width_meters, frame_height_meters):
         print("No mission commands downloaded.")
         print("Using auto generated coordinates.")
         autoBoxWpArray =  generate_box((vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon),
-                                       vehicle.heading)
+                                       heading)
         top_left_corner = (autoBoxWpArray[0][1], autoBoxWpArray[0][2])
         top_right_corner = (autoBoxWpArray[1][1], autoBoxWpArray[1][2])
         bottom_right_corner = (autoBoxWpArray[2][1], autoBoxWpArray[2][2])
