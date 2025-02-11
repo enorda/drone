@@ -3,7 +3,7 @@ import cv2.aruco as aruco
 import numpy as np
 from math import sqrt, tan, radians
 
-CALIBRATION_FILE_PATH = "..\CameraCalibration\calibration_chessboard.yaml"  # Path to your calibration file
+CALIBRATION_FILE_PATH = "../CameraCalibration/calibration_chessboard.yaml"  # Path to your calibration file
 MARKER_SIZE = 0.1  # Marker size in meters
 
 
@@ -38,7 +38,7 @@ class Camera:
             raise RuntimeError(f"Error opening ZED camera: {self.status}")
 
     def initialize_standard_camera(self):
-        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             raise RuntimeError("Error opening the standard camera")
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)

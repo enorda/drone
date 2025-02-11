@@ -6,7 +6,7 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
-from DroneCode.DroneProcess import *
+from DroneProcess import *
 import time
 import json
 from serial import Serial
@@ -25,8 +25,9 @@ logging.basicConfig(filename='flight.log',   # Name of the log file
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 
-espPORT = '/dev/ttyCH341USB0'  # Change to your actual port
-espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
+#espPORT = '/dev/ttyCH341USB1'  # Change to your actual port
+#espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
+#redundant
 
 
 class Camera:

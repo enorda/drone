@@ -6,7 +6,7 @@ import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 from SearchAlgoScript import *
-from DroneCode.DroneProcess import *
+from DroneProcess import *
 import time
 import json
 from serial import Serial
@@ -41,8 +41,8 @@ for handler in root_logger.handlers:
 logger = logging.getLogger("FlightLogger")
 
 
-USING_ZED_CAMERA = False  # Set to True if using the ZED camera, False otherwise
-espPORT = '/dev/ttyCH341USB0'  # Change to your actual port
+USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
+espPORT = '/dev/ttyCH341USB1'  # Change to your actual port
 espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 frame_width = 1280
 frame_height = 720
@@ -54,6 +54,7 @@ args = parser.parse_args()
 # Set SIMULATE_DRONE based on the --livedrone flag
 SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
 ALTITUDE = 4
+
 
 def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     # Connect to the drone

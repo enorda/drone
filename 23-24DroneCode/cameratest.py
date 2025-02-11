@@ -112,7 +112,7 @@ def get_detected_markers(frame, camera: Camera = None):
     print(f"Detected markers: {detected_markers}")
     return detected_markers
 
-
+"""
 if __name__ == "__main__":
     camera = Camera()
     frame_width = int(camera.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -136,3 +136,39 @@ if __name__ == "__main__":
         if cv2.waitKey(1) == ord('q'):
             break
     camera.close()
+
+"""
+if __name__ == "__main__":
+    camera = Camera()
+
+    # Initialize frame width, height, and FPS based on the camera type
+    if USING_ZED_CAMERA:
+        # ZED camera resolution (adjust as needed)
+        frame_width = 1920
+        frame_height = 1080
+        fps = 30
+    else:
+        # Default webcam resolution
+        frame_width = int(camera.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(camera.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(camera.cap.get(cv2.CAP_PROP_FPS))
+
+    # Initialize VideoWriter
+    output_filename = "output.avi"
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # Codec for AVI file
+    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+
+    while True:
+        frame = camera.getFrame()
+        if frame is None:
+            break
+
+        frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
+        marker_list = get_detected_markers(frame, camera)
+        video_writer.write(frame)  # Write the frame to the output file
+
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    camera.close()
+    
