@@ -5,7 +5,7 @@ from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
 import csv
 import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
-from SearchAlgoScript import *
+from DroneCode.SearchAlgoScript import *
 
 import multiprocessing
 # Set up option parsing to get connection string
