@@ -1,7 +1,7 @@
 # .gitignore
 
 # Python cache
-DroneCode/__pycache__/
+**/__pycache__/
 
 # Virtual enviroment directories
 .venv/
