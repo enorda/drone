@@ -4,8 +4,8 @@ from dronekit import VehicleMode
 import multiprocessing
 from serial import Serial
 
-from SearchAlgoScript import *
-from DroneCode.DroneProcess import *
+#from SearchAlgoScript import *
+from DroneCode.DroneProcess import connectMyCopter, arm_drone, flyInSearchPattern, takeoff_drone
 import DroneCode.CameraProcess as cam
 
 '''
@@ -56,7 +56,7 @@ def drone_control(location_queue):
     arm_drone(vehicle)
 
     # Outputs waypoints to csv
-    waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,6,8) #6 and 8 are rough numbers for testing 
+    #waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,6,8) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
     vehicle.airspeed = 3
