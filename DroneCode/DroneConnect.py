@@ -68,27 +68,15 @@ def flyInSearchPattern(vehicle, SIMULATE_DRONE: bool):
     
     search_waypoints = load_waypoints_from_csv('generated_search_pattern_waypoints.csv')
     # Iterate over waypoints, expecting lists of [latitude, longitude]
-    if SIMULATE_DRONE:
-        for wp in search_waypoints:
-            currentWP = (wp.lat, wp.lon)
-            print("Waypoint: ", currentWP)
-            # Go to the waypoint
-            vehicle.simple_goto(wp)
-            #time.sleep(20)
-            while(equirectangular_approximation(getCurrentLocation(vehicle), currentWP) > .5): 
-            
-                print(f"Current Location: ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
-                print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
-                time.sleep(1)
-    else:
-        for wp in search_waypoints:
-            currentWP = (wp.lat, wp.lon)
-            print("Waypoint: ", currentWP)
-            # Go to the waypoint
-            vehicle.simple_goto(wp)
-            #time.sleep(20)
-            while(equirectangular_approximation(getCurrentLocation(vehicle), currentWP) > .5): 
+    for wp in search_waypoints:
+        currentWP = (wp.lat, wp.lon)
+        print("Waypoint: ", currentWP)
+        # Go to the waypoint
+        vehicle.simple_goto(wp)
+        #time.sleep(20)
+        while(equirectangular_approximation(getCurrentLocation(vehicle), currentWP) > .5): 
+            if not SIMULATE_DRONE:
                 print(vehicle.location.global_relative_frame.alt)
-                print(f"Current Location: ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
-                print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
-                time.sleep(1)
+            print(f"Current Location: ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+            print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+            time.sleep(1)
