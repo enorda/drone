@@ -2,6 +2,8 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 from math import sqrt, tan, radians
+import pyzed as sl
+
 
 CALIBRATION_FILE_PATH = "..\CameraCalibration\calibration_chessboard.yaml"  # Path to your calibration file
 MARKER_SIZE = 0.1  # Marker size in meters
@@ -26,8 +28,6 @@ class Camera:
         print("Camera initialized")
 
     def initialize_zed_camera(self):
-        global sl
-        import pyzed.sl as sl
         self.zed = sl.Camera()
         self.init = sl.InitParameters()
         self.init.camera_resolution = sl.RESOLUTION.HD1080 #Likely will need to change resolution to get better framerate
@@ -55,7 +55,6 @@ class Camera:
             return self.get_standard_frame()
 
     def get_zed_frame(self):
-        global sl
         if self.zed.grab() != sl.ERROR_CODE.SUCCESS:
             print("Error grabbing frame from ZED camera")
             return None
