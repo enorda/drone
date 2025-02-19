@@ -18,6 +18,8 @@ import logging
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+#Added this to save video image
+import os
 
 #LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
 AVC_LOG = 25  # Pick a value that does not clash with existing levels
@@ -42,10 +44,13 @@ logger = logging.getLogger("FlightLogger")
 
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
-espPORT = '/dev/ttyCH341USB1'  # Change to your actual port
+espPORT = '/dev/ttyUSB0'  # Change to your actual port
 espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 frame_width = 1280
 frame_height = 720
+#Added this to grab frames for video
+fps = 10
+#end
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
@@ -109,13 +114,27 @@ def search_algorithm(marker_queue, isMarkerFound):
 def camera_run(marker_queue, distance_to_marker_queue):
     camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
+    cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
     
+    # Initialize VideoWriter, added to try to record frames. havent tested
+    output_filename = "Record_while_flying.avi"
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
+    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+    print(f"Saving video to: {os.path.abspath(output_filename)}")
+    # end
     while True:
+        
         frame = camera.get_frame()
         if frame is None:
             break
 
         camera_position, processed_frame = detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, 0)
+
+        #Added to try to record, havent test      
+        frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
+        #marker_list = get_detected_markers(frame, camera) #Dont know why this isnt working get_detected_marker is used as detect_markers here
+        video_writer.write(frame)  # Write the frame to the output file
+        #end
 
         if camera_position is not None:
             marker_id, tvec = camera_position
@@ -183,10 +202,11 @@ if __name__ == "__main__":
         
         # Wait for the processes to finish
         camera_process.join()
+    
         search_process.join()
         comms_process.join()
         flight_process.join()
-
+        
     except Exception as e:
         print(f"Error: {e}")
     finally:
