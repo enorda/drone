@@ -4,7 +4,12 @@ from dronekit import VehicleMode
 import multiprocessing
 from serial import Serial
 
-#from SearchAlgoScript import *
+# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim.py)
+import sys, os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
+# Project file imports
 from DroneCode.DroneProcess import connectMyCopter, arm_drone, flyInSearchPattern, takeoff_drone
 import DroneCode.CameraProcess as cam
 

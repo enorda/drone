@@ -1,5 +1,11 @@
 import time
 
+# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim.py)
+import sys, os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
+# Project file imports
 from dronekit import connect, Vehicle, VehicleMode
 from DroneCode.SearchAlgoScript import load_waypoints_from_csv, equirectangular_approximation
 
