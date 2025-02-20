@@ -1,14 +1,18 @@
 from __future__ import print_function
 import time
-from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
-
-import csv
-import math
-from math import radians, cos, sin, sqrt, atan2, atan, tan
-
+from dronekit import connect, VehicleMode
 
 # Set up option parsing to get connection string
 import argparse
+
+'''
+UNUSED LIBRARIES
+-------------------------------
+import csv
+import math
+from math import radians, cos, sin, sqrt, atan2, atan, tan
+from dronekit import Vehicle, LocationGlobalRelative
+'''
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
