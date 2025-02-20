@@ -153,6 +153,74 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
         time.sleep(10)
 
     else:
+        while(searchAttempts < 2): #number of full start search attempts 
+            lastKnownMarkerLoc = None
+            for wp in search_waypoints:    
+                currentWP = (wp.lat, wp.lon)
+                print("Waypoint:", currentWP)
+                # Go to the waypoint
+                vehicle.simple_goto(wp)
+                while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
+                    location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
+                    # print(f"Current Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+                    # print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+                    if(isMarkerFound.value):
+                        lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+                        vehicle.simple_goto(lastKnownMarkerLoc) #stay in same position
+                        vehicle.airspeed = 1
+                        print("Found Marker, stopping")
+                        #DO WE WANT TO SWITCH MODES?
+                        break
+                if(isMarkerFound.value): #Statement should logically always catch if it doesn't need to find a faster way to stop the drone
+                    break
+                
+            #Homing Process 
+            if(isMarkerFound.value):
+                tvec = distance_to_marker_queue.get()
+                tx = tvec[0]  # X-axis distance
+                ty = tvec[1]  # Y-axis distance
+                horizontal_distance = np.sqrt(tx**2 + ty**2)
+                while(horizontal_distance > 0.1):
+                    tvec = distance_to_marker_queue.get()
+                    tx = tvec[0]  # X-axis distance
+                    ty = tvec[1]  # Y-axis distance
+                    horizontal_distance = np.sqrt(tx**2 + ty**2)
+                    angle_xy = np.degrees(np.arctan2(ty, tx))
+                    approx_marker_coords = geodesic(meters=horizontal_distance).destination(
+                                    Point(vehicle.location.global_relative_frame.lat, 
+                                    vehicle.location.global_relative_frame.lon), angle_xy)
+                    markerLocation = LocationGlobalRelative(approx_marker_coords.latitude, approx_marker_coords.longitude, vehicle.location.global_relative_frame.alt)
+                    vehicle.simple_goto(markerLocation) #go to marker approx position
+                    print(f"Going to: {markerLocation}")
+                    mWP = (approx_marker_coords.latitude, approx_marker_coords.latitude)
+                    #print(f"ER Approx: {equirectangular_approximation(getCurrentLocation(vehicle),mWP)}")
+                    print(f"Horiz Distance: {horizontal_distance}")
+                    # print(f"HOMING PROCESS: tx:{tx}, ty:{ty}")
+                    if(not isMarkerFound.value):
+                        vehicle.simple_goto(lastKnownMarkerLoc)
+                        while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
+                            time.sleep(1)
+                    if(not isMarkerFound.value):
+                        print("Marker Detected: Homing Failed")
+                        break    
+                    else:
+                        lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+                
+                if(isMarkerFound.value):
+                    print("Retrying full search")
+                    break #homing complete
+                else:
+                    searchAttempts += 1
+                    print("Retrying full search")
+
+        #HOLD POSITION FOR SOME AMT OF TIME
+        currentLocation = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+        vehicle.simple_goto(currentLocation)
+        print("Vehicle Has Finished Homing")
+        time.sleep(10)
+
+        #Legacy LiveDrone Code
+        '''
         for wp in search_waypoints:
             currentWP = (wp.lat, wp.lon)
             print("Waypoint:", currentWP)
@@ -165,3 +233,5 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                 print(f"Current Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
                 print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
                 time.sleep(1)
+                '''
+
