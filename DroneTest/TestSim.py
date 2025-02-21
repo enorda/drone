@@ -39,7 +39,7 @@ cornerCoordinates = [
 
 enordaCopter = DroneCode.DroneConnect.connectMyCopter(SIMULATE_DRONE)
 
-print(f"Starting Location: , ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
+print(f"Starting Location: ({enordaCopter.location.global_relative_frame.lat}, {enordaCopter.location.global_relative_frame.lon})")
 print("Heading: ", enordaCopter.heading)
 
 # ARM DRONE
