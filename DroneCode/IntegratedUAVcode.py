@@ -49,7 +49,7 @@ espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 frame_width = 1280
 frame_height = 720
 #Added this to grab frames for video
-fps = 10
+fps = 30
 #end
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")
@@ -116,7 +116,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
     
-    # Initialize VideoWriter, added to try to record frames. havent tested
+    # Initialize VideoWriter to save video
     output_filename = "Record_while_flying.avi"
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
     video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
@@ -149,6 +149,16 @@ def camera_run(marker_queue, distance_to_marker_queue):
     
     camera.close()
 
+def dummy_coords ():
+    dummy_location = [32.123213, -92.1231231]
+    dummy_marker_found = True
+    return dummy_location, dummy_marker_found
+
+def dummy_coords2 ():
+    dummy_location = [90.123213, -20.1231231]
+    dummy_marker_found = True
+    return dummy_location, dummy_marker_found
+
 def comms(ser, isMarkerFound, location_queue):
     while True:
         if not location_queue.empty():
@@ -164,6 +174,7 @@ def comms(ser, isMarkerFound, location_queue):
 if __name__ == "__main__":
     #TODO: need to make a graceful start and exit
     try:
+        
         # Try to establish the serial connection
         print("Waiting for serial connection...")
         ser = Serial(espPORT, espBAUDRATE, timeout=1)
@@ -209,8 +220,10 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error: {e}")
+    
     finally:
         # Close serial connection when done
         if ser.is_open:
             ser.close()
         print("Closed serial connection.")
+        
