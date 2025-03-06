@@ -95,7 +95,7 @@ def load_calibration(file_path):
     if camera_matrix is None or dist_coeffs is None:
         raise ValueError("Calibration file is missing required data")
     return camera_matrix, dist_coeffs
-
+'''
 def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id):
     """
     Detects ArUco markers and computes the camera's position relative to the markers.
@@ -113,10 +113,9 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
         for i, marker_id in enumerate(ids.flatten()):
             marker_queue.put(marker_id)
             if marker_id == drop_zone_id:
-                corner = corners[i][0]
                 rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners[i], MARKER_SIZE, camera_matrix, dist_coeffs)
                 rvec, tvec = rvecs[0].flatten(), tvecs[0].flatten()
-
+                corner = corner[i][0]
                 # Store tvec for the drop zone marker
                 camera_relative_position = (marker_id, tvec)
                 print(f"Marker ID: {marker_id}, rvec: {rvec}, tvec: {tvec}")
@@ -150,12 +149,14 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
                 # Ensure valid pose estimation
                 if rvecs is not None and tvecs is not None:
                     rvec, tvec = rvecs[0].flatten(), tvecs[0].flatten()
+
+                    print(f"RVEC: {rvec}    TVEC: {tvec}")
                     
                     # Store tvec for the drop zone marker
                     camera_relative_position = (marker_id, tvec)
                     
                     # Print the pose for debugging purposes
-                    print(f"Marker ID: {marker_id}, rvec: {rvec}, tvec: {tvec}")
+                   # print(f"Marker ID: {marker_id}, rvec: {rvec:.2f}, tvec: {tvec:.2f}")
                     
                     # Draw the axes (continuously in each frame where the marker is detected)
                     cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.05)
@@ -165,7 +166,7 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
     
     # Show frame with the drawn axes and markers
     return camera_relative_position, frame
-'''
+
 def display_camera_position(frame, camera_relative_position):
     """
     Display the camera's relative position to the drop zone marker in the corner of the CV2 window.
@@ -175,7 +176,7 @@ def display_camera_position(frame, camera_relative_position):
 
         # Generate the distance info string
         side_distance = tvec[0]  # X-axis distance
-        forward_distance = tvec[1]  # Y-axis distance
+        forward_distance = tvec[1] # Y-axis distance
         height_distance = tvec[2]  # Z-axis distance
         distance_info = f"Marker {marker_id}: Fwd: {forward_distance:.2f} m, Side: {side_distance:.2f} m, Ht: {height_distance:.2f} m"
 
@@ -192,9 +193,12 @@ def label_marker(frame, corner, marker_id, tvec):
     cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
     cv2.putText(frame, f"ID: {marker_id}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-    cv2.putText(frame, f"Marker ID: {marker_id}, rvec: {rvec}, tvec: {tvec}", (zone_label_position[0], zone_label_position[1] + 50),
+    cv2.putText(frame, f"Marker ID: {marker_id}, tvec: {tvec}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-
+    #Added to debug values TN 2/28
+    tx = tvec[0]
+    ty = tvec[1]
+    print(f"TX: {tx:.2f} TY: {ty:.2f}")
 def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     """
     Calculates the Ground Sampling Distance (GSD) in meters per pixel for the ZED camera, then calculates the
@@ -275,4 +279,5 @@ def get_detected_markers(frame, camera: Camera = None):
     # Return the dictionary of detected markers
     print(f"Detected markers: {detected_markers}")
     return detected_markers
-    '''
+    
+'''

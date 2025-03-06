@@ -1,0 +1,33 @@
+Waiting for serial connection...
+Serial connection established successfully.
+Camera ready
+Initializing camera...
+Camera initialized
+Saving video to: /home/enorda/DroneCodeRepo/drone/DroneCode/Record_while_flying.avi
+RVEC: [-2.22759932 -1.86857317 -0.25313675]    TVEC: [-0.15057188  0.01881692  0.45411092]
+TX: -0.15 TY: 0.02
+[-0.15057188  0.01881692  0.45411092]
+RVEC: [-2.42077156 -1.71061091 -0.27842795]    TVEC: [-0.16140529  0.05327362  0.43986173]
+TX: -0.16 TY: 0.05
+RVEC: [-2.51054064 -1.61228016 -0.25653493]    TVEC: [-0.17691455  0.07760317  0.45853881]
+TX: -0.18 TY: 0.08
+RVEC: [-2.56535888 -1.53117682 -0.37270567]    TVEC: [-0.17799719  0.09535601  0.44305939]
+TX: -0.18 TY: 0.10
+RVEC: [-2.59286013 -1.49460429 -0.50141696]    TVEC: [-0.17682711  0.09884339  0.43213072]
+TX: -0.18 TY: 0.10
+RVEC: [-2.66929801 -1.44638242 -0.61098073]    TVEC: [-0.17562473  0.10424135  0.43188351]
+TX: -0.18 TY: 0.10
+RVEC: [2.70011155 1.26563914 0.52783439]    TVEC: [-0.15958969  0.11502628  0.39610936]
+TX: -0.16 TY: 0.12
+Closed serial connection.
+Comms Ready
+Search ready
+W:5.141332824271612H:2.520747137554955
+Starting Location: , (32.9934785, -96.751685)
+Heading:  206
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
