@@ -21,6 +21,7 @@ import numpy as np
 #Added this to save video image
 import os
 
+"""
 #LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
 AVC_LOG = 25  # Pick a value that does not clash with existing levels
 logging.addLevelName(AVC_LOG, "AVC")
@@ -42,6 +43,83 @@ for handler in root_logger.handlers:
     handler.addFilter(CustomLevelFilter())
 logger = logging.getLogger("FlightLogger")
 
+# Set up logging to log both to flight.log and a text file
+
+# Set up a StreamHandler to log to a text file
+text_file_handler = logging.FileHandler('flight_output.txt', mode='w')  # 'w' to overwrite the file every time
+text_file_handler.setLevel(AVC_LOG)  # Set to the custom level
+
+# Add formatter for the text file handler
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+text_file_handler.setFormatter(formatter)
+
+# Add the text file handler to the logger
+root_logger.addHandler(text_file_handler)
+"""
+# Custom log level setup for AVC
+AVC_LOG = 25  # Pick a value that does not clash with existing levels
+logging.addLevelName(AVC_LOG, "AVC")
+
+def log_avc(self, message, *args, **kwargs):
+    if self.isEnabledFor(AVC_LOG):
+        self._log(AVC_LOG, message, args, **kwargs)
+
+logging.Logger.avc = log_avc
+
+# Custom level filter
+class CustomLevelFilter(logging.Filter):
+    def filter(self, record):
+        return record.levelno == AVC_LOG
+
+# Function to generate a unique filename
+def get_unique_filename(base_filename):
+    """
+    This function checks if the file already exists.
+    If it does, it appends a number to the filename to make it unique.
+    """
+    file_name, file_extension = os.path.splitext(base_filename)
+    counter = 1
+    new_filename = base_filename
+    while os.path.exists(new_filename):
+        new_filename = f"{file_name}_{counter}{file_extension}"
+        counter += 1
+    return new_filename
+
+log_filename = get_unique_filename('flight.log')
+# Set up logging to flight.log
+logging.basicConfig(
+    filename=log_filename,  # Log file for logger.avc
+    level=AVC_LOG,  # Set to the custom level
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Add a custom filter to the root logger
+root_logger = logging.getLogger()
+for handler in root_logger.handlers:
+    handler.addFilter(CustomLevelFilter())
+
+# Create a logger for FlightLogger
+logger = logging.getLogger("FlightLogger")
+
+# Custom stream class to write to both terminal and file
+class Output:
+    def __init__(self, filename, mode="w"):
+        self.terminal = sys.stdout
+        self.file = open(filename, mode)
+
+    def write(self, message):
+        self.terminal.write(message)  # Write to terminal
+        self.file.write(message)  # Write to file
+
+    def flush(self):
+        self.terminal.flush()
+        self.file.flush()
+
+# Check and get unique filename for the output text file
+unique_output_filename = get_unique_filename('flight_output.txt')
+
+# Redirect sys.stdout to the custom Output class
+sys.stdout = Output(unique_output_filename)
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 espPORT = '/dev/ttyUSB0'  # Change to your actual port
@@ -64,7 +142,9 @@ ALTITUDE = 4
 def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     # Connect to the drone
     vehicle = connectMyCopter()
-
+    #Wait for seach algorithm to start TN 2/28
+    search_ready.wait()
+    print("Search ready")
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     if(USING_ZED_CAMERA):
         ground_coverage_width, ground_coverage_height = get_image_dimensions_meters((frame_width,frame_height), camera_matrix,
@@ -101,6 +181,11 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     logger.avc("UAV END: LANDING")
 
 def search_algorithm(marker_queue, isMarkerFound):
+    #Wait for the comms to be ready TN 2/28
+   # comms_ready.wait()
+    print("Comms Ready")
+    #Set search queue to ready TN 2/28
+    search_ready.set()
     while True:
         if not marker_queue.empty():
             marker_id = marker_queue.get()
@@ -111,17 +196,24 @@ def search_algorithm(marker_queue, isMarkerFound):
                 with isMarkerFound.get_lock():
                     isMarkerFound.value = False
 
+
 def camera_run(marker_queue, distance_to_marker_queue):
+   #Tell camera Queue is ready TN 2/28
+    camera_ready.set()
+    print("Camera ready")
     camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
     
     # Initialize VideoWriter to save video
     output_filename = "Record_while_flying.avi"
+    unique_output_filename = get_unique_filename(output_filename)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
-    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+    video_writer = cv2.VideoWriter(unique_output_filename , fourcc, fps, (frame_width, frame_height))
     print(f"Saving video to: {os.path.abspath(output_filename)}")
     # end
+    #Added 2/27
+    coordinates_saved = False
     while True:
         
         frame = camera.get_frame()
@@ -138,6 +230,11 @@ def camera_run(marker_queue, distance_to_marker_queue):
 
         if camera_position is not None:
             marker_id, tvec = camera_position
+           #Added this to see if the coordinates will stop updating once the marker is found TN 2/27
+            if not coordinates_saved and marker_id == 0:
+                print(tvec)
+                coordinates_saved = True
+            #End
             distance_to_marker_queue.put(tvec)
         # Display camera positions in the corner of the window
         display_camera_position(processed_frame, camera_position)
@@ -160,21 +257,29 @@ def dummy_coords2 ():
     return dummy_location, dummy_marker_found
 
 def comms(ser, isMarkerFound, location_queue):
+    #Tell coms queue is ready TN 2/28
+    comms_ready.set()
+
     while True:
         if not location_queue.empty():
             locationTuple = location_queue.get()
-            data = str(locationTuple) + str(isMarkerFound.value)
+            #data = str(123410) + str(490384) + str("\n")
+            data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
             ser.write(data.encode('utf-8'))
-            print(f"Sent: {data}")
-            logger.avc(f"Sent From Jetson: {data}")
+            #print(f"Sent: {data}")
+            #logger.avc(f"Sent From Jetson: {data}")
+            if ser.in_waiting > 0:
+                message = ser.readline().decode('utf-8').strip()
+                logger.avc(f"{message}\n")
             if(isMarkerFound.value):
                 logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
-            # time.sleep(5)  # Wait before sending the next message
+            #time.sleep(0.5)  # Wait before sending the next message
 
 if __name__ == "__main__":
+    
     #TODO: need to make a graceful start and exit
     try:
-        
+      
         # Try to establish the serial connection
         print("Waiting for serial connection...")
         ser = Serial(espPORT, espBAUDRATE, timeout=1)
@@ -194,23 +299,30 @@ if __name__ == "__main__":
         location_queue = multiprocessing.Queue()
         distance_to_marker_queue = multiprocessing.Queue()
         isMarkerFound = multiprocessing.Value('b', False)
-
+        
+        # Events to signal when each process has booted TN 2/28
+        camera_ready = multiprocessing.Event()
+        search_ready = multiprocessing.Event()
+        comms_ready = multiprocessing.Event()
 
         # Start the flight process
         flight_process = multiprocessing.Process(target=drone_control, args=(location_queue, isMarkerFound, distance_to_marker_queue))
         flight_process.start()
+ 
 
         # Start the camera and search algorithm processes
         camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue, distance_to_marker_queue))
         camera_process.start()
 
+
         search_process = multiprocessing.Process(target=search_algorithm, args=(marker_queue, isMarkerFound))
         search_process.start()
+
 
         # Start the comms process, passing the serial connection
         comms_process = multiprocessing.Process(target=comms, args=(ser, isMarkerFound, location_queue))
         comms_process.start()
-        
+
         # Wait for the processes to finish
         camera_process.join()
     
@@ -220,10 +332,10 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error: {e}")
-    
+   
     finally:
         # Close serial connection when done
         if ser.is_open:
             ser.close()
         print("Closed serial connection.")
-        
+      

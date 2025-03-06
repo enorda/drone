@@ -117,15 +117,18 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
                 corner = corners[i][0]
                 rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners[i], MARKER_SIZE, camera_matrix, dist_coeffs)
                 rvec, tvec = rvecs[0].flatten(), tvecs[0].flatten()
-
+                x = tvec[0] 
+                y = tvec[1] 
+                print(f"RVEC: {rvec}    TVEC: {tvec}")
+                print(f"X: {x}    Y: {y}")
                 # Store tvec for the drop zone marker
                 camera_relative_position = (marker_id, tvec)
-                #print(f"Marker ID: {marker_id}, rvec: {rvec}, tvec: {tvec}")
+                print(f" Flatten tvec in detect_markers: {[f'{x:.2f}' for x in tvec]}")
                 
                 # Draw axes and label the marker
                 cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.05)
                 label_marker(frame, corner, marker_id, tvec)
-
+                
     return camera_relative_position, frame
 '''
 def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id):
@@ -175,25 +178,26 @@ def display_camera_position(frame, camera_relative_position):
         marker_id, tvec = camera_relative_position
 
         # Generate the distance info string
-        side_distance = tvec[0]  # X-axis distance
-        forward_distance = tvec[1]  # Y-axis distance
+        side_distance = tvec[0] # X-axis distance
+        forward_distance = tvec[1] # Y-axis distance
         height_distance = tvec[2]  # Z-axis distance
-        distance_info = f"Marker {marker_id}: Fwd: {forward_distance:.2f} m, Side: {side_distance:.2f} m, Ht: {height_distance:.2f} m"
-
+        distance_info = f"Marker {marker_id}: Side: {side_distance:.2f} m, Fwd: {forward_distance:.2f} m, Ht: {height_distance:.2f} m"
+        
         # Display the string on the frame
         text_position = (10, 30)  # Top-left corner
         cv2.putText(frame, distance_info, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+        print(f"Distance in display_camera_position: {distance_info}")
+
 
 def label_marker(frame, corner, marker_id, tvec):
     color = (0, 255, 0) if marker_id == 0 else (0, 0, 255)
     zone_label = "Drop Zone" if marker_id == 0 else "Non-Drop Zone"
     zone_label_position = np.mean(corner, axis=0).astype(int)
-    
     cv2.polylines(frame, [corner.astype(int)], isClosed=True, color=color, thickness=3)
     cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
     cv2.putText(frame, f"ID: {marker_id}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-    cv2.putText(frame, f"Marker ID: {marker_id}, rvec: {rvec}, tvec: {tvec}", (zone_label_position[0], zone_label_position[1] + 50),
+    cv2.putText(frame, f"tvec: {tvec[0], tvec[1]}", (zone_label_position[0]-400, zone_label_position[1] + 100),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
 
 def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
@@ -278,15 +282,26 @@ def get_detected_markers(frame, camera: Camera = None):
     return detected_markers
     '''
 
+"""
+def positionCameraOverMarker(tvec):
+    xvec, yvec, zvec = tvec.flatten()  # Extract translation components
 
-def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance_to_marker_queue):
-    tvec = distance_to_marker_queue.get()
     tx = tvec[0]  # X-axis distance
     ty = tvec[1]  # Y-axis distance
+    
+    # Calculate horizontal distance and angle
     horizontal_distance = np.sqrt(tx**2 + ty**2)
     angle_xy = np.degrees(np.arctan2(ty, tx))
+
+    # Assume an arbitrary reference location (latitude, longitude)
+    reference_lat = 32.7767  # Example latitude
+    reference_lon = -96.7970  # Example longitude
+
     approx_marker_coords = geodesic(meters=horizontal_distance).destination(
-    Point(vehicle.location.global_relative_frame.lat, 
-    vehicle.location.global_relative_frame.lon), angle_xy)
-    markerLocation = LocationGlobalRelative(approx_marker_coords.latitude, approx_marker_coords.longitude, vehicle.location.global_relative_frame.alt)
-    print(markerLocation)
+        Point(reference_lat, reference_lon), angle_xy)
+
+    print("Estimated Marker Location:", approx_marker_coords.latitude, approx_marker_coords.longitude)
+    # Example usage with a tvec from camera pose estimation
+    tvec_example = np.array([[0.5], [1.0], [2.0]])  # Example translation vector
+    positionCameraOverMarker(tvec_example)
+    """        

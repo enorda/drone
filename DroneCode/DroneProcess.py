@@ -2,10 +2,11 @@ from __future__ import print_function
 import time
 from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
 
-from DroneCode.SearchAlgoScript import *
-
+from SearchAlgoScript import *
+import logging
 # Set up option parsing to get connection string
 import argparse
+from IntegratedUAVcode import logger
 
 '''
 UNUSED LIBRARIES
@@ -124,6 +125,7 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                 tvec = distance_to_marker_queue.get()
                 tx = tvec[0]  # X-axis distance
                 ty = tvec[1]  # Y-axis distance
+                
                 horizontal_distance = np.sqrt(tx**2 + ty**2)
                 while(horizontal_distance > 0.1):
                     tvec = distance_to_marker_queue.get()
@@ -193,17 +195,22 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                         #Maybe can use this? TN 2/23 vehicle.mode = VehicleMode("LOITER")   #Force stop
                         #TN 2/23 time.sleep(2)  # Wait for it to stabilize
                         break
+                print("break 198")
                 if(isMarkerFound.value): #Statement should logically always catch if it doesn't need to find a faster way to stop the drone
                     break
-                
+            print(f"201: Marker value: {isMarkerFound.value}")    
             #Homing Process 
             if(isMarkerFound.value):
+                print("Marker Found homing process initiated")
                 tvec = distance_to_marker_queue.get()
                 tx = tvec[0]  # X-axis distance
                 ty = tvec[1]  # Y-axis distance
+                #Added to see if the numbers are accurate
+                print(f"tx from homing: {tx:.2f}, ty from homing: {ty:.2f}")
                 horizontal_distance = np.sqrt(tx**2 + ty**2)
-                while(horizontal_distance > 0.01): #adjusted threshold to see if it will go into homing TN 2/26
+                while(horizontal_distance > 0.1): #adjusted threshold to see if it will go into homing TN 2/26
                     tvec = distance_to_marker_queue.get()
+                    print(tvec)
                     tx = tvec[0]  # X-axis distance
                     ty = tvec[1]  # Y-axis distance
                     horizontal_distance = np.sqrt(tx**2 + ty**2)
@@ -216,10 +223,10 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                     print(f"Going to: {markerLocation}")
                     logger.avc(f"Going to: {markerLocation}")
                     mWP = (approx_marker_coords.latitude, approx_marker_coords.latitude)
-                    #print(f"ER Approx: {equirectangular_approximation(getCurrentLocation(vehicle),mWP)}")
+                    print(f"ER Approx: {equirectangular_approximation(getCurrentLocation(vehicle),mWP)}")
                     print(f"Horiz Distance: {horizontal_distance}")
                     logger.avc(f"Horiz Distance: {horizontal_distance}")
-                    # print(f"HOMING PROCESS: tx:{tx}, ty:{ty}")
+                    print(f"HOMING PROCESS: tx:{tx}, ty:{ty}")
                     if(not isMarkerFound.value):
                         vehicle.simple_goto(lastKnownMarkerLoc)
                         while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):

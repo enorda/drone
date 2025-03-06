@@ -21,13 +21,17 @@ import numpy as np
 #Added this to save video image
 import os
 
-#LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
+# Custom log level setup for AVC
 AVC_LOG = 25  # Pick a value that does not clash with existing levels
 logging.addLevelName(AVC_LOG, "AVC")
+
 def log_avc(self, message, *args, **kwargs):
     if self.isEnabledFor(AVC_LOG):
         self._log(AVC_LOG, message, args, **kwargs)
+
 logging.Logger.avc = log_avc
+
+# Custom level filter
 class CustomLevelFilter(logging.Filter):
     def filter(self, record):
         return record.levelno == AVC_LOG
@@ -41,6 +45,52 @@ root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     handler.addFilter(CustomLevelFilter())
 logger = logging.getLogger("FlightLogger")
+
+# Function to generate a unique filename
+def get_unique_filename(base_filename):
+    """
+    This function checks if the file already exists.
+    If it does, it appends a number to the filename to make it unique.
+    """
+    file_name, file_extension = os.path.splitext(base_filename)
+    counter = 1
+    new_filename = base_filename
+    while os.path.exists(new_filename):
+        new_filename = f"{file_name}_{counter}{file_extension}"
+        counter += 1
+    return new_filename
+
+# Custom stream class to write to both terminal and file
+class Output:
+    def __init__(self, filename, mode="w"):
+        self.terminal = sys.stdout
+        self.file = open(filename, mode)
+
+    def write(self, message):
+        self.terminal.write(message)  # Write to terminal
+        self.file.write(message)  # Write to file
+
+    def flush(self):
+        self.terminal.flush()
+        self.file.flush()
+
+# Check and get unique filename for the output text file
+unique_output_filename = get_unique_filename('flight_output.txt')
+
+# Set sys.stdout to your custom output class to log to both terminal and file
+sys.stdout = Output(unique_output_filename)
+
+# Set up logging to log both to flight.log and a text file
+# Set up a StreamHandler to log to the unique text file
+text_file_handler = logging.FileHandler(unique_output_filename, mode='w')  # 'w' to overwrite the file every time
+text_file_handler.setLevel(AVC_LOG)  # Set to the custom level
+
+# Add formatter for the text file handler
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+text_file_handler.setFormatter(formatter)
+
+# Add the text file handler to the logger
+root_logger.addHandler(text_file_handler)
 
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
@@ -71,8 +121,8 @@ def camera_run(marker_queue, distance_to_marker_queue):
     video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
     print(f"Saving video to: {os.path.abspath(output_filename)}")
     # end
+    coordinates_saved = False
     while True:
-        
         frame = camera.get_frame()
         if frame is None:
             break
@@ -88,7 +138,11 @@ def camera_run(marker_queue, distance_to_marker_queue):
 
         if camera_position is not None:
             marker_id, tvec = camera_position
+            if not coordinates_saved and marker_id == 0:
+                print(f"marker found {tvec}")
+                coordinates_saved = True
             distance_to_marker_queue.put(tvec)
+            print(f"This is the distance queue in IntegratedUAV: {distance_to_marker_queue.get()}")
 
         # Display camera positions in the corner of the window
         display_camera_position(processed_frame, camera_position)
@@ -102,7 +156,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
 
 
 if __name__ == "__main__":
-        vehicle = connectMyCopter()
+       # vehicle = connectMyCopter()
 
         marker_queue = multiprocessing.Queue()
         location_queue = multiprocessing.Queue()
@@ -111,8 +165,7 @@ if __name__ == "__main__":
   # Start the camera and search algorithm processes
         camera_process = multiprocessing.Process(target=camera_run, args=(marker_queue, distance_to_marker_queue))
         camera_process.start()
-        flyInSearchPattern(vehicle, location_queue, isMarkerFound, distance_to_marker_queue)
-   
+      #
         # Wait for the processes to finish
         camera_process.join()
 
