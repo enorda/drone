@@ -1,9 +1,6 @@
 from __future__ import print_function
 
-# Set up option parsing to get connection string
-import argparse
-
-# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim.py)
+# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim)
 import sys, os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
@@ -14,14 +11,8 @@ from dronekit import VehicleMode
 import DroneCode.SearchAlgoScript
 import DroneCode.DroneConnect
 
-''' Unused libraries
-from dronekit import connect, Vehicle, LocationGlobalRelative
-import csv
-import math
-from math import radians, cos, sin, sqrt, atan2, atan, tan
-import time
-'''
-
+# Set up option parsing to get connection string
+import argparse
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
 args = parser.parse_args()
