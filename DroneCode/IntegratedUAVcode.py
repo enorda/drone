@@ -78,7 +78,7 @@ def get_unique_filename(base_filename):
     If it does, it appends a number to the filename to make it unique.
     """
     file_name, file_extension = os.path.splitext(base_filename)
-    counter = 1
+    counter = 0
     new_filename = base_filename
     while os.path.exists(new_filename):
         new_filename = f"{file_name}_{counter}{file_extension}"
@@ -120,6 +120,7 @@ unique_output_filename = get_unique_filename('flight_output.txt')
 
 # Redirect sys.stdout to the custom Output class
 sys.stdout = Output(unique_output_filename)
+sys.stderr = sys.stdout
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 espPORT = '/dev/ttyUSB0'  # Change to your actual port
@@ -245,7 +246,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
             break
     
     camera.close()
-
+'''
 def dummy_coords ():
     dummy_location = [32.123213, -92.1231231]
     dummy_marker_found = True
@@ -255,17 +256,21 @@ def dummy_coords2 ():
     dummy_location = [90.123213, -20.1231231]
     dummy_marker_found = True
     return dummy_location, dummy_marker_found
+'''
 
 def comms(ser, isMarkerFound, location_queue):
     #Tell coms queue is ready TN 2/28
     comms_ready.set()
 
     while True:
-        if not location_queue.empty():
+        # if not location_queue.empty():
+        while True:                                       # FOR DEBUGGING
             locationTuple = location_queue.get()
-            #data = str(123410) + str(490384) + str("\n")
+            # data = str(123410) + str(490384) + str("\n")  # FOR DEBUGGING
+            # data1 = str(54321) + str(9876) +str("\n")     # FOR DEBUGGING
             data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
             ser.write(data.encode('utf-8'))
+            # ser.write(data1.encode('utf-8'))              # FOR DEBUGGING
             #print(f"Sent: {data}")
             #logger.avc(f"Sent From Jetson: {data}")
             if ser.in_waiting > 0:
@@ -273,7 +278,7 @@ def comms(ser, isMarkerFound, location_queue):
                 logger.avc(f"{message}\n")
             if(isMarkerFound.value):
                 logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
-            #time.sleep(0.5)  # Wait before sending the next message
+            time.sleep(1)  # Wait 1 second before sending the next message
 
 if __name__ == "__main__":
     
