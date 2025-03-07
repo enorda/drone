@@ -150,7 +150,7 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
                 if rvecs is not None and tvecs is not None:
                     rvec, tvec = rvecs[0].flatten(), tvecs[0].flatten()
 
-                    print(f"RVEC: {rvec}    TVEC: {tvec}")
+                    #print(f"RVEC: {rvec}    TVEC: {tvec}")
                     
                     # Store tvec for the drop zone marker
                     camera_relative_position = (marker_id, tvec)
@@ -198,7 +198,7 @@ def label_marker(frame, corner, marker_id, tvec):
     #Added to debug values TN 2/28
     tx = tvec[0]
     ty = tvec[1]
-    print(f"TX: {tx:.2f} TY: {ty:.2f}")
+    #print(f"TX: {tx:.2f} TY: {ty:.2f}")
 def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     """
     Calculates the Ground Sampling Distance (GSD) in meters per pixel for the ZED camera, then calculates the
@@ -231,53 +231,3 @@ def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     frame_width = frame_altitude * tan(radians(fov_horizontal / 2.0)) * 2.0 * magnification
 
     return frame_width, frame_height
-
-'''
-def get_detected_markers(frame, camera: Camera = None):
-    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-
-    # Initialize the aruco dictionary and parameters
-    aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
-
-    # Initialize the list of detected markers
-    detected_markers = []
-
-    # Detect the markers in the frame
-    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)  # , parameters=parameters)
-
-    if ids is not None:
-        # Show the detected markers
-        frame = aruco.drawDetectedMarkers(frame, corners)
-
-        for i, marker_id in enumerate(ids.flatten()):
-            corner = corners[i][0]
-            # Estimate pose for the current marker
-            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corner, MARKER_SIZE, camera_matrix, dist_coeffs)
-
-            if marker_id == 0:
-                color = (0,255,0)
-                zone_label = "Drop Zone"
-            else:
-                color = (0,0,255)
-                zone_label = "Non-Drop Zone"
-            
-            cv2.polylines(frame, [corner.astype(int)], isClosed=True, color=color, thickness=3)
-            zone_label_position = np.mean(corner, axis=0).astype(int)
-            cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-            id_label_position = (zone_label_position[0], zone_label_position[1] + 50)
-            cv2.putText(frame, f"ID: {marker_id}", id_label_position, cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-            # Display rvec and tvec below the ID
-   
-        camera.showFrame(frame)
-
-        # Add all detected ids to the list
-        detected_markers.extend(ids)
-
-    else:
-        camera.getFrameAndShow()
-
-    # Return the dictionary of detected markers
-    print(f"Detected markers: {detected_markers}")
-    return detected_markers
-    
-'''
