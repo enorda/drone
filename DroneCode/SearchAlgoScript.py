@@ -1,29 +1,20 @@
 import time
-from dronekit import LocationGlobalRelative
 import sys
-
-'''
-UNUSED LIBRARIES
---------------------------------
-from dronekit import connect, VehicleMode, mavutil, LocationGlobal,
-        Command # for the drone control interface
-'''
-
 # import to do path gen stuff automatically
 import folium
 import csv
-from folium import plugins
 import webbrowser  # so folium can make a map display
 import math
 import numpy as np
-#from math import radians, cos, sin, sqrt, atan2, atan, tan
+from folium import plugins
+from dronekit import LocationGlobalRelative
 from math import radians, cos
-#from geopy.distance import distance
 from geopy.distance import geodesic
 from geopy.point import Point
 
 FRAME_SIZE_OVERLAP = 0.9  # overlap of the frames in the search pattern
 ALTITUDE = 4
+
 
 def verify_box_distances(box, expected_distance_yards=30):
     """
@@ -47,6 +38,7 @@ def verify_box_distances(box, expected_distance_yards=30):
         results.append(abs(distance - expected_distance_meters) <= .1)  # Allow a small tolerance
     
     return results
+
 
 def generate_box(current_location, heading):
     """
@@ -186,6 +178,7 @@ def save_waypoints_to_csv(waypoints, csv_filename):
             waypoint_index += 1
             writer.writerow({'latitude': waypoint[0], 'longitude': waypoint[1]})  # add waypoint to file
 
+
 def generate_zig_zag_path_waypoints(point1, point2, point3, num_cols, num_rows):
     # Calculate the side vectors
     side_vector1 = np.array(point2) - np.array(point1)
@@ -271,7 +264,6 @@ def generate_zig_zag_path_waypoints(point1, point2, point3, num_cols, num_rows):
 
 
 def load_waypoints_from_csv(file_path):
-    global ALTITUDE
     csv_loaded_waypoints = []
     with open(file_path, 'r') as file:
         reader = csv.DictReader(file)
@@ -281,6 +273,7 @@ def load_waypoints_from_csv(file_path):
             altitude = float(ALTITUDE)
             csv_loaded_waypoints.append(LocationGlobalRelative(latitude, longitude, altitude))
     return csv_loaded_waypoints
+
 
 def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meters):
     # Wait for the vehicle to have a GPS fix
@@ -346,9 +339,6 @@ def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meter
     else:
         print("Home location is not available.")
         sys.exit("Exiting due to no home position")
-
-    # print the fence data defined as 4 normal waypoints in mission planner
-
 
     # get width and length of the search area in meters
     horizontal_distance = equirectangular_approximation(top_left_corner, top_right_corner)
