@@ -62,7 +62,6 @@ SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwi
 ALTITUDE = 4
 
 
-
 def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     # Connect to the drone
     vehicle = connectMyCopter()
@@ -103,7 +102,6 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     logger.avc("UAV END: LANDING")
 
 
-
 def search_algorithm(marker_queue, isMarkerFound):
     while True:
         if not marker_queue.empty():
@@ -114,7 +112,6 @@ def search_algorithm(marker_queue, isMarkerFound):
             else:
                 with isMarkerFound.get_lock():
                     isMarkerFound.value = False
-
 
 
 def camera_run(marker_queue, distance_to_marker_queue):
@@ -157,7 +154,6 @@ def camera_run(marker_queue, distance_to_marker_queue):
     camera.close()
 
 
-
 def comms(ser, isMarkerFound, location_queue):
     while True:
         if not location_queue.empty():
@@ -169,7 +165,6 @@ def comms(ser, isMarkerFound, location_queue):
             if(isMarkerFound.value):
                 logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
             # time.sleep(5)  # Wait before sending the next message
-
 
 
 if __name__ == "__main__":
