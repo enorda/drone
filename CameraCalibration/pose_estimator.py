@@ -1,5 +1,6 @@
 import cv2
 import cv2.aruco as aruco
+import pyzed as sl
 import numpy as np
 
 USING_ZED_CAMERA = False  # Set to True if using the ZED camera, False otherwise
@@ -19,8 +20,6 @@ class Camera:
         print("Camera initialized")
 
     def initialize_zed_camera(self):
-        global sl
-        import pyzed.sl as sl
         self.zed = sl.Camera()
         self.init = sl.InitParameters()
         self.init.camera_resolution = sl.RESOLUTION.HD1080
@@ -44,7 +43,6 @@ class Camera:
             return self.get_standard_frame()
 
     def get_zed_frame(self):
-        global sl
         if self.zed.grab() != sl.ERROR_CODE.SUCCESS:
             print("Error grabbing frame from ZED camera")
             return None
