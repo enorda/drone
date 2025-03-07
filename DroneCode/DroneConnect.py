@@ -1,13 +1,15 @@
-import time
+from __future__ import print_function
 
-# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim.py)
 import sys, os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
+import time
+
 # Project file imports
 from dronekit import connect, Vehicle, VehicleMode
 from DroneCode.SearchAlgoScript import load_waypoints_from_csv, equirectangular_approximation
+
 
 # Used to connect to copter with args from command line
 def connectMyCopter(SIMULATE_DRONE: bool) -> Vehicle:
@@ -76,7 +78,7 @@ def flyInSearchPattern(vehicle, SIMULATE_DRONE: bool):
     # Iterate over waypoints, expecting lists of [latitude, longitude]
     for wp in search_waypoints:
         currentWP = (wp.lat, wp.lon)
-        print("Waypoint: ", currentWP)
+        print(f"Waypoint: {currentWP}")
         # Go to the waypoint
         vehicle.simple_goto(wp)
         #time.sleep(20)
@@ -84,5 +86,5 @@ def flyInSearchPattern(vehicle, SIMULATE_DRONE: bool):
             if not SIMULATE_DRONE:
                 print(vehicle.location.global_relative_frame.alt)
             print(f"Current Location: ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
-            print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+            print("Distance to WP: ", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
             time.sleep(1)

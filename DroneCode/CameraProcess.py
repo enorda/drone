@@ -1,8 +1,10 @@
+from __future__ import print_function
+
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-from math import sqrt, tan, radians
 import pyzed as sl
+from math import sqrt, tan, radians
 
 
 CALIBRATION_FILE_PATH = "../CameraCalibration/calibration_chessboard.yaml"  # Path to your calibration file
@@ -89,6 +91,7 @@ def load_calibration(file_path):
     if camera_matrix is None or dist_coeffs is None:
         raise ValueError("Calibration file is missing required data")
     return camera_matrix, dist_coeffs
+
 
 def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id):
     """

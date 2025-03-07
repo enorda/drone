@@ -13,20 +13,6 @@ sys.path.append(project_root)
 from DroneCode.DroneProcess import connectMyCopter, arm_drone, flyInSearchPattern, takeoff_drone
 import DroneCode.CameraProcess as cam
 
-'''
-UNUSED LIBRARIES
----------------------------------------------
-import csv
-miport math
-import json
-import math
-from math import radians, cos, sin, sqrt, atan2, atan, tan
-from dronekit import connect, Vehicle, LocationGlobalRelative
-import cv2.aruco as aruco
-import numpy as np
-'''
-
-
 # Set up option parsing to get connection string
 import argparse
 import logging
@@ -38,9 +24,8 @@ logging.basicConfig(filename='flight.log',   # Name of the log file
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 
-#espPORT = '/dev/ttyCH341USB1'  # Change to your actual port
-#espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
-#redundant
+espPORT = '/dev/ttyCH341USB1'  # Change to your actual port
+espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")

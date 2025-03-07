@@ -82,9 +82,7 @@ def generate_box(current_location, heading):
 
 
 def generate_folium_map(waypoints, fence_waypoint_array):
-    global home_location
-    global home_latitude
-    global home_longitude
+    
     # Create a Folium map centered on home location
     my_map = folium.Map(location=[waypoints[0][0], waypoints[0][1]], zoom_start=20, max_zoom=25)
 
