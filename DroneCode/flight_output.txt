@@ -1,0 +1,82 @@
+Waiting for serial connection...
+Serial connection established successfully.
+Camera ready
+Initializing camera...
+Process Process-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 205, in camera_run
+    camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/CameraProcess.py", line 24, in __init__
+    self.initialize_zed_camera()
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/CameraProcess.py", line 40, in initialize_zed_camera
+    raise RuntimeError(f"Error opening ZED camera: {self.status}")
+RuntimeError: Error opening ZED camera: CAMERA NOT DETECTED
+Closed serial connection.
+Process Process-4:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 277, in comms
+    message = ser.readline().decode('utf-8').strip()
+  File "/usr/local/lib/python3.10/dist-packages/serial/serialposix.py", line 565, in read
+    ready, _, _ = select.select([self.fd, self.pipe_abort_read_r], [], [], timeout.time_left())
+KeyboardInterrupt
+Comms Ready
+Process Process-3:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 191, in search_algorithm
+    if not marker_queue.empty():
+  File "/usr/lib/python3.10/multiprocessing/queues.py", line 129, in empty
+    return not self._poll()
+  File "/usr/lib/python3.10/multiprocessing/connection.py", line 257, in poll
+    return self._poll(timeout)
+  File "/usr/lib/python3.10/multiprocessing/connection.py", line 424, in _poll
+    r = wait([self], timeout)
+  File "/usr/lib/python3.10/multiprocessing/connection.py", line 925, in wait
+    selector.register(obj, selectors.EVENT_READ)
+  File "/usr/lib/python3.10/selectors.py", line 360, in register
+    self._selector.register(key.fd, poller_events)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 334, in <module>
+    search_process.join()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Search ready
+W:5.141332824271612H:2.520747137554955
+Starting Location: , (32.9935292, -96.7543232)
+Heading:  206
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Waiting for drone to become armable
+Process Process-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 162, in drone_control
+    arm_drone(vehicle)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/DroneProcess.py", line 54, in arm_drone
+    time.sleep(1)  # Wait one second before checking if drone is armable
+KeyboardInterrupt

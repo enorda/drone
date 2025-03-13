@@ -82,7 +82,7 @@ def takeoff_drone(vehicle, targetAltitude):
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt >= targetAltitude * 0.95:
+        if vehicle.location.global_relative_frame.alt >= targetAltitude * 0.85:
             print("Reached target altitude")
             break
         time.sleep(1)
@@ -92,16 +92,37 @@ def getCurrentLocation(vehicle):
     return currentLoc
 
 def flyInSearchPatternTest(vehicle: Vehicle, location_queue, isMarkerFound, distance_to_marker_queue):
-    while True:
+    while(True): #number of full start search attempts 
+        lastKnownMarkerLoc = None
+        for i in range(10):    
+            print("simgo goto")
+            # Go to the waypoint
+            #vehicle.simple_goto(wp)
+            if(isMarkerFound.value):
+                location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
+                # print(f"Current Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+                # print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
+                if(isMarkerFound.value):
+                    lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+                    #vehicle.simple_goto(lastKnownMarkerLoc) #stay in same position
+                    vehicle.airspeed = 1
+                    print("Found Marker, stopping")
+                    #DO WE WANT TO SWITCH MODES?
+                    break
+            print(f"Before breaking out of for loop: {isMarkerFound.value}")    
+            if(isMarkerFound.value): #Statement should logically always catch if it doesn't need to find a faster way to stop the drone
+                break
+        print(f"Right before homing: {isMarkerFound.value}")  
+
         if(isMarkerFound.value):
             tvec = distance_to_marker_queue.get()
             tx = tvec[0]  # X-axis distance
             ty = tvec[1]  # Y-axis distance
 
             print(f"tx: {tx}, ty: {ty}")
-            '''
             horizontal_distance = np.sqrt(tx**2 + ty**2)
-            while(horizontal_distance > 0.1):
+            print(f"horizontal distance: {horizontal_distance}")
+            while(horizontal_distance > 0.05):
                 tvec = distance_to_marker_queue.get()
                 tx = tvec[0]  # X-axis distance
                 ty = tvec[1]  # Y-axis distance
@@ -111,35 +132,36 @@ def flyInSearchPatternTest(vehicle: Vehicle, location_queue, isMarkerFound, dist
                     Point(vehicle.location.global_relative_frame.lat, 
                     vehicle.location.global_relative_frame.lon), angle_xy)
                 markerLocation = LocationGlobalRelative(approx_marker_coords.latitude, approx_marker_coords.longitude, vehicle.location.global_relative_frame.alt)
-                vehicle.simple_goto(markerLocation) #go to marker approx position
+                #vehicle.simple_goto(markerLocation) #go to marker approx position
                 print(f"Going to: {markerLocation}")
                 mWP = (approx_marker_coords.latitude, approx_marker_coords.latitude)
                 #print(f"ER Approx: {equirectangular_approximation(getCurrentLocation(vehicle),mWP)}")
                 print(f"Horiz Distance: {horizontal_distance}")
                 # print(f"HOMING PROCESS: tx:{tx}, ty:{ty}")
                 if(not isMarkerFound.value):
-                    vehicle.simple_goto(lastKnownMarkerLoc)
+                    #vehicle.simple_goto(lastKnownMarkerLoc)
                     while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
                         time.sleep(1)
                 if(not isMarkerFound.value):
-                    print("Marker Detected: Homing Failed")
-                    break    
+                    print("Marker lost: Homing Failed")
+                    break
                 else:
                     lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+                    
             
             if(isMarkerFound.value):
-                print("Retrying full search")
+                print("Exiting Homing")
                 break #homing complete
             else:
                 searchAttempts += 1
                 print("Retrying full search")
-                '''
+                
 
         #HOLD POSITION FOR SOME AMT OF TIME
-        #currentLocation = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
+        currentLocation = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
         #vehicle.simple_goto(currentLocation)
-        #print("Vehicle Has Finished Homing")
-        time.sleep(0.01)
+        print("Vehicle Has Finished Homing")
+        time.sleep(0.1)
 
 
 def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance_to_marker_queue):
@@ -152,9 +174,11 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
             print("Waypoint:", currentWP)
             # Go to the waypoint
             vehicle.simple_goto(wp)
+            location_queue.put(getCurrentLocation(vehicle))                                                                                      # Using Function "getCurrentLocation"
             while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
-                location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
-                # print(f"Current Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
+                #location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])                         # Original
+                #location_queue.put(LocationGlobalRelative[vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])   # With "LocationGlobalRelative"
+                print(f"Current Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
                 # print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
                 if(isMarkerFound.value):
                     lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
@@ -163,16 +187,19 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                     print("Found Marker, stopping")
                     #DO WE WANT TO SWITCH MODES?
                     break
+            print(f"Before breaking out of for loop: {isMarkerFound.value}")    
             if(isMarkerFound.value): #Statement should logically always catch if it doesn't need to find a faster way to stop the drone
                 break
-            
+        print(f"Right before homing: {isMarkerFound.value}")    
         #Homing Process 
         if(isMarkerFound.value):
+            print("In homing")
             tvec = distance_to_marker_queue.get()
             tx = tvec[0]  # X-axis distance
             ty = tvec[1]  # Y-axis distance
             
             horizontal_distance = np.sqrt(tx**2 + ty**2)
+            print(f"Horizontal distance in Homing: {horizontal_distance}")
             while(horizontal_distance > 0.1):
                 tvec = distance_to_marker_queue.get()
                 tx = tvec[0]  # X-axis distance
@@ -183,19 +210,25 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                                 Point(vehicle.location.global_relative_frame.lat, 
                                 vehicle.location.global_relative_frame.lon), angle_xy)
                 markerLocation = LocationGlobalRelative(approx_marker_coords.latitude, approx_marker_coords.longitude, vehicle.location.global_relative_frame.alt)
+                print(f"ready to move")
                 vehicle.simple_goto(markerLocation) #go to marker approx position
+                #time.sleep(2) #DEBUG
                 print(f"Going to: {markerLocation}")
                 mWP = (approx_marker_coords.latitude, approx_marker_coords.latitude)
                 #print(f"ER Approx: {equirectangular_approximation(getCurrentLocation(vehicle),mWP)}")
                 print(f"Horiz Distance: {horizontal_distance}")
                 # print(f"HOMING PROCESS: tx:{tx}, ty:{ty}")
+                #time.sleep(2) #DEBUGG
                 if(not isMarkerFound.value):
                     vehicle.simple_goto(lastKnownMarkerLoc)
                     while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
+                        print(f"Marker Not Found Equirectuangular_approximation: {equirectangular_approximation(getCurrentLocation(vehicle),currentWP)}") #ADDED TO DEBUG
                         time.sleep(1)
                 if(not isMarkerFound.value):
-                    print("Marker Detected: Homing Failed")
-                    break    
+                    time.sleep(2)  # Give time for marker re-detection before backtracking
+                    if (not isMarkerFound.value): #ADDED TO DEBUG
+                        print("Marker Detected: Homing Failed")  #ADDED TO DEBUG
+                        break   #ADDED TO DEBUG
                 else:
                     lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
             

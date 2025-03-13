@@ -65,7 +65,7 @@ class Camera:
             image = sl.Mat()
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
             frame = image.get_data()
-            frame=cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+            frame=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             return frame
     
 
@@ -131,7 +131,41 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
     Detects ArUco markers and computes the camera's position relative to the markers.
     Displays information about detected markers.
     """
-    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    # Adjust brightness by increasing L-channel
+    brightness_increase = 255  # Adjust this value as needed
+    gray[:, :, 0] = np.clip(gray[:, :, 0] + brightness_increase, 0, 255)
+
+    avg_a = np.average(gray[:, :, 1])
+    avg_b = np.average(gray[:, :, 2])
+    gray[:, :, 1] = gray[:, :, 1] - ((avg_a - 128) * (gray[:, :, 0] / 255.0) * 1.1)
+    gray[:, :, 2] = gray[:, :, 2] - ((avg_b - 128) * (gray[:, :, 0] / 255.0) * 1.1)
+    
+    gray = cv2.cvtColor(gray, cv2.COLOR_LAB2BGR)
+    cv2.namedWindow("GRAY: ",cv2.WINDOW_NORMAL)
+    cv2.imshow("GRAY: ", gray)
+    """
+    lab= cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    l_channel, a, b = cv2.split(lab)
+
+# Applying CLAHE to L-channel
+# feel free to try different values for the limit and grid size:
+    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
+    cl = clahe.apply(l_channel)
+
+# merge the CLAHE enhanced L-channel with the a and b channel
+    limg = cv2.merge((cl,a,b))
+
+# Converting image from LAB Color model to BGR color spcae
+    enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+# Stacking the original image with the enhanced image
+    result = np.hstack((frame, enhanced_img))
+    cv2.namedWindow("Result",cv2.WINDOW_NORMAL)
+
+    cv2.imshow('Result', result)
+    """
     aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
     corners, ids, _ = aruco.detectMarkers(gray, aruco_dict)
 
