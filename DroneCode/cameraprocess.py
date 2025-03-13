@@ -233,7 +233,19 @@ def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
 
     return frame_width, frame_height
 
-'''
+'''Process Process-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 156, in camera_run
+    camera_position, processed_frame = detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, 0)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/CameraProcess.py", line 163, in detect_markers
+    label_marker(frame, corner, marker_id, tvec)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/CameraProcess.py", line 196, in label_marker
+    cv2.putText(frame, f"Marker ID: {marker_id}, tvec: {tvec:.2f}", (zone_label_position[0], zone_label_position[1] + 50),
+TypeError: unsupported format string passed to numpy.ndarray.__format__
 def get_detected_markers(frame, camera: Camera = None):
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 

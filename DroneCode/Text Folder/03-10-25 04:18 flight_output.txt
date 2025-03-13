@@ -1,0 +1,100 @@
+Waiting for serial connection...
+Serial connection established successfully.
+Closed serial connection.
+Process Process-4:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 293, in comms
+    time.sleep(1)  # Wait 1 second before sending the next message
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 344, in <module>
+    camera_process.join()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Search ready
+W:5.141332824271612H:2.520747137554955
+Starting Location: , (32.9937529, -96.7538144)
+Heading:  114
+The drone is now armable
+The drone is not in guided mode yet
+The drone is now in guided mode
+Waiting for drone to arm:  {'STANDBY'}
+Waiting for drone to arm:  {'STANDBY'}
+The drone has now been armed
+Copter GPS Ready
+gpsfixed
+getting the cmds position
+cmds: <dronekit.CommandSequence object at 0xffff876be560>
+Mission commands:
+1, 32.993873596191406, -96.75382995605469, 100.0
+2, 32.99386978149414, -96.75370788574219, 100.0
+3, 32.993743896484375, -96.75370788574219, 100.0
+4, 32.99374771118164, -96.75384521484375, 100.0
+5, 32.993812561035156, -96.7536392211914, 100.0
+Home Location: Latitude=32.99375534057617, Longitude=-96.75382232666016, Altitude=209.52999877929688
+Horiz: 11.39246838525993, Vert: 13.997774427034093 
+0.00012212990259996125
+0.000125885009765625
+[[ 32.99386978 -96.75370789]
+ [ 32.9938736  -96.75382996]
+ [ 32.99374771 -96.75382996]
+ [ 32.9937439  -96.75370789]]
+Waypoints saved to generated_search_pattern_waypoints.csv
+[[1, 32.993873596191406, -96.75382995605469, 100.0], [2, 32.99386978149414, -96.75370788574219, 100.0], [3, 32.993743896484375, -96.75370788574219, 100.0], [4, 32.99374771118164, -96.75384521484375, 100.0], [5, 32.993812561035156, -96.7536392211914, 100.0]]
+fence: (32.993873596191406, -96.75382995605469)
+fence: (32.99386978149414, -96.75370788574219)
+fence: (32.993743896484375, -96.75370788574219)
+fence: (32.99374771118164, -96.75384521484375)
+Set default/target airspeed to 3
+Set default/target airspeed to 3
+Taking off!
+ Altitude:  0.014
+ Altitude:  0.013
+ Altitude:  0.364
+ Altitude:  0.988
+ Altitude:  1.721
+ Altitude:  2.513
+ Altitude:  3.252
+ Altitude:  3.755
+Reached target altitude
+Waypoint: (32.99374389648436, -96.75370788574217)
+Before breaking out of for loop: 0
+Waypoint: (32.99374771118163, -96.75382995605466)
+Before breaking out of for loop: 0
+Waypoint: (32.9938735961914, -96.75382995605464)
+Before breaking out of for loop: 0
+Waypoint: (32.993869781494126, -96.75370788574216)
+Before breaking out of for loop: 0
+Right before homing: 0
+Waypoint: (32.99374389648436, -96.75370788574217)
+Before breaking out of for loop: 0
+Waypoint: (32.99374771118163, -96.75382995605466)
+Before breaking out of for loop: 0
+Waypoint: (32.9938735961914, -96.75382995605464)
+Before breaking out of for loop: 0
+Waypoint: (32.993869781494126, -96.75370788574216)
+Before breaking out of for loop: 0
+Right before homing: 0
+Waypoint: (32.99374389648436, -96.75370788574217)
+Found Marker, stopping
+Before breaking out of for loop: 1
+Right before homing: 1
+In homing
+Horizontal distance in Homing: 0.2259219882081861
+ready to move
+Going to: LocationGlobalRelative:lat=32.99376940554409,lon=-96.75371318974932,alt=4.027
+Horiz Distance: 0.7634613201773813
+ready to move
+Going to: LocationGlobalRelative:lat=32.99377092137811,lon=-96.7537145488806,alt=4.02
+Horiz Distance: 0.658244764477356
+ready to move
+Going to: LocationGlobalRelative:lat=32.99377420152324

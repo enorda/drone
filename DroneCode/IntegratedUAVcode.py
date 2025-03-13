@@ -20,6 +20,7 @@ import cv2.aruco as aruco
 import numpy as np
 #Added this to save video image
 import os
+from datetime import datetime
 
 """
 #LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
@@ -56,6 +57,17 @@ text_file_handler.setFormatter(formatter)
 # Add the text file handler to the logger
 root_logger.addHandler(text_file_handler)
 """
+
+log_folder = "DEL-Logging Folder"
+# Ensure the log folder exists
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
+text_folder = "DEL-Text Folder"
+if not os.path.exists(text_folder):
+    os.makedirs(text_folder)
+record_folder = "DEL-Recording Folder"
+if not os.path.exists(record_folder):
+    os.makedirs(record_folder)
 # Custom log level setup for AVC
 AVC_LOG = 25  # Pick a value that does not clash with existing levels
 logging.addLevelName(AVC_LOG, "AVC")
@@ -85,7 +97,8 @@ def get_unique_filename(base_filename):
         counter += 1
     return new_filename
 
-log_filename = get_unique_filename('flight.log')
+current_datetime = datetime.now().strftime("%m-%d-%y %I:%M")
+log_filename = get_unique_filename(os.path.join(log_folder,f"{current_datetime} flight.log"))
 # Set up logging to flight.log
 logging.basicConfig(
     filename=log_filename,  # Log file for logger.avc
@@ -116,7 +129,7 @@ class Output:
         self.file.flush()
 
 # Check and get unique filename for the output text file
-unique_output_filename = get_unique_filename('flight_output.txt')
+unique_output_filename = get_unique_filename(os.path.join(text_folder, f"{current_datetime} flight_output.txt"))
 
 # Redirect sys.stdout to the custom Output class
 sys.stdout = Output(unique_output_filename)
@@ -183,7 +196,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
 
 def search_algorithm(marker_queue, isMarkerFound):
     #Wait for the comms to be ready TN 2/28
-   # comms_ready.wait()
+    comms_ready.wait()
     print("Comms Ready")
     #Set search queue to ready TN 2/28
     search_ready.set()
@@ -207,7 +220,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
     cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
     
     # Initialize VideoWriter to save video
-    output_filename = "Record_while_flying.avi"
+    output_filename = os.path.join(record_folder, f"{current_datetime} Record_while_flying.avi")
     unique_output_filename = get_unique_filename(output_filename)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
     video_writer = cv2.VideoWriter(unique_output_filename , fourcc, fps, (frame_width, frame_height))
@@ -233,7 +246,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
             marker_id, tvec = camera_position
            #Added this to see if the coordinates will stop updating once the marker is found TN 2/27
             if not coordinates_saved and marker_id == 0:
-                print(tvec)
+                print(f"TVEC in camera_run: {tvec}")
                 coordinates_saved = True
             #End
             distance_to_marker_queue.put(tvec)
@@ -263,11 +276,10 @@ def comms(ser, isMarkerFound, location_queue):
     comms_ready.set()
 
     while True:
-        # if not location_queue.empty():
-        while True:                                       # FOR DEBUGGING
+        # location_queue.put([32.123213, -92.1231231])      # FOR DEBUGGING
+        # location_queue.put([90.123213, -20.1231231])      # FOR DEBUGGING
+        if not location_queue.empty():
             locationTuple = location_queue.get()
-            # data = str(123410) + str(490384) + str("\n")  # FOR DEBUGGING
-            # data1 = str(54321) + str(9876) +str("\n")     # FOR DEBUGGING
             data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
             ser.write(data.encode('utf-8'))
             # ser.write(data1.encode('utf-8'))              # FOR DEBUGGING
