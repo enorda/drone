@@ -3,6 +3,8 @@ import time
 from dronekit import connect, Vehicle, VehicleMode, LocationGlobalRelative
 
 from DroneCode.SearchAlgoScript import *
+<<<<<<< HEAD
+=======
 
 # Set up option parsing to get connection string
 import argparse
@@ -15,10 +17,19 @@ import math
 from math import radians, cos, sin, sqrt, atan2, atan, tan
 '''
 from SearchAlgoScript import *
+>>>>>>> 44eb1fb127b1f4612ba2a05e60430c2bfc3d4176
 
-import multiprocessing
 # Set up option parsing to get connection string
 import argparse
+
+'''
+UNUSED LIBRARIES
+------------------------------------
+import csv
+import math
+import multiprocessing
+from math import radians, cos, sin, sqrt, atan2, atan, tan
+'''
 
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")

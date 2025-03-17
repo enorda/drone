@@ -1,7 +1,13 @@
 import time
-from dronekit import connect, VehicleMode, mavutil, LocationGlobalRelative, LocationGlobal, \
-    Command  # for the drone control interface
+from dronekit import LocationGlobalRelative
 import sys
+
+'''
+UNUSED LIBRARIES
+--------------------------------
+from dronekit import connect, VehicleMode, mavutil, LocationGlobal,
+        Command # for the drone control interface
+'''
 
 # import to do path gen stuff automatically
 import folium
@@ -10,8 +16,9 @@ from folium import plugins
 import webbrowser  # so folium can make a map display
 import math
 import numpy as np
-from math import radians, cos, sin, sqrt, atan2, atan, tan
-from geopy.distance import distance
+#from math import radians, cos, sin, sqrt, atan2, atan, tan
+from math import radians, cos
+#from geopy.distance import distance
 from geopy.distance import geodesic
 from geopy.point import Point
 
