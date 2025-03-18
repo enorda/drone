@@ -1,6 +1,6 @@
 import time
 
-# Ensures compiler can find DroneTest module from this file (DroneTest.TestSim.py)
+# Ensures compiler can find DroneTest module from this file
 import sys, os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)

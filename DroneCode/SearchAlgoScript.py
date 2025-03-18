@@ -284,6 +284,26 @@ def load_waypoints_from_csv(file_path):
             csv_loaded_waypoints.append(LocationGlobalRelative(latitude, longitude, altitude))
     return csv_loaded_waypoints
 
+def extract_gv_waypoints(waypoints, rows, cols):
+    '''
+    For each coordinate pair that makes up a line (parallel to rows) in the UAV flight path,
+    save the midpoint as a GV waypoint. As a result, the GV waypoints should make a line straight
+    down and in center of the zig-zag UAV search flightpath.
+    '''
+    result = [[0 for i in range(rows)] for k in range(cols)]
+    p = 0
+    for i in range(0, len(waypoints), 2):
+        x1, y1 = waypoints[i]
+        x2, y2 = waypoints[i+1]
+        
+        result[p][0] = (x1+x2)/2
+        result[p][1] = (y1+y2)/2
+        p += 1
+    
+    print(f"Waypoints for GV extracted: \n{result}")
+    return result
+    
+
 def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meters):
     # Wait for the vehicle to have a GPS fix
     fence_waypoint_array = []
@@ -375,6 +395,12 @@ def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meter
     # Generate zigzag waypoints
     # waypoints = generate_zigzag_waypoints(bottom_left_corner, top_right_corner, rows, cols)
     waypoints = generate_zig_zag_path_waypoints(top_left_corner, top_right_corner, bottom_right_corner, rows, cols)
+    
+    # Find waypoints for GV based on scout UAV flight path
+    gv_waypoints = extract_gv_waypoints(waypoints, rows, cols)
+    '''
+    INSERT COMMS LOGIC HERE
+    '''
 
     # Save waypoints to CSV
     csv_filename = 'generated_search_pattern_waypoints.csv'
