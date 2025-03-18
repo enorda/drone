@@ -58,14 +58,14 @@ text_file_handler.setFormatter(formatter)
 root_logger.addHandler(text_file_handler)
 """
 
-log_folder = "DEL-Logging Folder"
+log_folder = "Logging Folder"
 # Ensure the log folder exists
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
-text_folder = "DEL-Text Folder"
+text_folder = "Text Folder"
 if not os.path.exists(text_folder):
     os.makedirs(text_folder)
-record_folder = "DEL-Recording Folder"
+record_folder = "Recording Folder"
 if not os.path.exists(record_folder):
     os.makedirs(record_folder)
 # Custom log level setup for AVC
@@ -99,6 +99,10 @@ def get_unique_filename(base_filename):
 
 current_datetime = datetime.now().strftime("%m-%d-%y %I:%M")
 log_filename = get_unique_filename(os.path.join(log_folder,f"{current_datetime} flight.log"))
+
+# Check and get unique filename for the output text file
+unique_output_filename = get_unique_filename(os.path.join(text_folder, f"{current_datetime} flight_output.log"))
+
 # Set up logging to flight.log
 logging.basicConfig(
     filename=log_filename,  # Log file for logger.avc
@@ -121,15 +125,16 @@ class Output:
         self.file = open(filename, mode)
 
     def write(self, message):
-        self.terminal.write(message)  # Write to terminal
-        self.file.write(message)  # Write to file
+        
+        if message.strip():  # Ensure we don’t log empty lines with timestamps
+            timestamp = f"\033[96m[{datetime.now().strftime('%m-%d-%y - %I:%M:%S')}]\033[0m "
+            self.terminal.write(timestamp + message + "\n")
+            self.file.write(f"[{datetime.now().strftime('%m-%d-%y - %I:%M:%S')}] {message}\n")
 
     def flush(self):
         self.terminal.flush()
         self.file.flush()
 
-# Check and get unique filename for the output text file
-unique_output_filename = get_unique_filename(os.path.join(text_folder, f"{current_datetime} flight_output.txt"))
 
 # Redirect sys.stdout to the custom Output class
 sys.stdout = Output(unique_output_filename)
@@ -198,6 +203,7 @@ def search_algorithm(marker_queue, isMarkerFound):
     #Wait for the comms to be ready TN 2/28
     comms_ready.wait()
     print("Comms Ready")
+
     #Set search queue to ready TN 2/28
     search_ready.set()
     while True:
@@ -290,7 +296,7 @@ def comms(ser, isMarkerFound, location_queue):
                 logger.avc(f"{message}\n")
             if(isMarkerFound.value):
                 logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
-            time.sleep(1)  # Wait 1 second before sending the next message
+            #time.sleep(1)  # Wait 1 second before sending the next message
 
 if __name__ == "__main__":
     

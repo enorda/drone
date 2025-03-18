@@ -15,7 +15,7 @@ from geopy.distance import distance
 from geopy.distance import geodesic
 from geopy.point import Point
 
-FRAME_SIZE_OVERLAP = 0.9  # overlap of the frames in the search pattern
+FRAME_SIZE_OVERLAP = 0.7  # overlap of the frames in the search pattern
 ALTITUDE = 4
 
 def verify_box_distances(box, expected_distance_yards=30):
