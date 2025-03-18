@@ -187,7 +187,7 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                     print("Found Marker, stopping")
                     #DO WE WANT TO SWITCH MODES?
                     break
-            print(f"Before breaking out of for loop: {isMarkerFound.value}")    
+            print(f"Before breaking out of for loop: isMarkerFound.value = {isMarkerFound.value}")    
             if(isMarkerFound.value): #Statement should logically always catch if it doesn't need to find a faster way to stop the drone
                 break
         print(f"Right before homing: {isMarkerFound.value}")    
@@ -221,19 +221,17 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                 #time.sleep(2) #DEBUGG
                 if(not isMarkerFound.value):
                     vehicle.simple_goto(lastKnownMarkerLoc)
-                    while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5):
-                        print(f"Marker Not Found Equirectuangular_approximation: {equirectangular_approximation(getCurrentLocation(vehicle),currentWP)}") #ADDED TO DEBUG
+                    while(equirectangular_approximation(getCurrentLocation(vehicle),currentWP) > .5): # SHOULD ALWAYS DROP THROUGH SINCE 0.5 IS QUITE LARGE
+                        print(f"Marker Not Found Going To Last Known Location. Current Equirectuangular_approximation Of Drone: {equirectangular_approximation(getCurrentLocation(vehicle),currentWP)}") #ADDED TO DEBUG
                         time.sleep(1)
-                if(not isMarkerFound.value):
-                    time.sleep(2)  # Give time for marker re-detection before backtracking
-                    if (not isMarkerFound.value): #ADDED TO DEBUG
-                        print("Marker Detected: Homing Failed")  #ADDED TO DEBUG
-                        break   #ADDED TO DEBUG
+                if(not isMarkerFound.value): 
+                    print("Marker Detected: Homing Failed")  #ADDED TO DEBUG
+                    break   #ADDED TO DEBUG
                 else:
                     lastKnownMarkerLoc = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
             
             if(isMarkerFound.value):
-                print("Retrying full search")
+                print("Homing Successful")
                 break #homing complete
             else:
                 searchAttempts += 1
@@ -242,5 +240,6 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
     #HOLD POSITION FOR SOME AMT OF TIME
     currentLocation = LocationGlobalRelative(vehicle.location.global_relative_frame.lat, vehicle.location.global_relative_frame.lon, vehicle.location.global_relative_frame.alt)
     vehicle.simple_goto(currentLocation)
+    location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon]) # SEND FINAL MARKER LOCATION TO QUEUE
     print("Vehicle Has Finished Homing")
     time.sleep(10)
