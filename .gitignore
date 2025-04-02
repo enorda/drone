@@ -10,4 +10,5 @@
 # Generated files
 generated_*
 *.log
-**/output.avi
+*.avi
+*.csv
