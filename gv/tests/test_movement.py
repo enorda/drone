@@ -1,18 +1,11 @@
 from __future__ import print_function
 import time
+import dronekit_sitl
 from dronekit import connect, VehicleMode, LocationGlobalRelative
-import multiprocessing
-import csv
-import math
-from math import radians, cos, sin, sqrt, atan2, atan, tan
-import json
-from serial import Serial
-import argparse
-import logging
-import numpy as np
 from collections.abc import MutableMapping  # Fix for collections error
 
 # Logger Setup
+import logging
 AVC_LOG = 25
 logging.addLevelName(AVC_LOG, "AVC")
 def log_avc(self, message, *args, **kwargs):
@@ -29,6 +22,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("FlightLogger")
 
+import argparse
 parser = argparse.ArgumentParser(description="Connect to a drone.")
 parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
 args = parser.parse_args()
@@ -37,8 +31,7 @@ SIMULATE_DRONE = not args.livedrone
 def connectMyCopter():
     if SIMULATE_DRONE:
         # Create a SITL drone instance instead of launching one beforehand
-        #import dronekit_sitl
-        #sitl = dronekit_sitl.start_default(32.92019271850586, -96.9479751586914)
+        sitl = dronekit_sitl.start_default(32.92019271850586, -96.9479751586914)
         connection_string = sitl.connection_string()
         vehicle = connect(connection_string, wait_ready=True)
 

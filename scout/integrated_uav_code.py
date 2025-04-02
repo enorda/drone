@@ -6,6 +6,7 @@ from search_alg import *
 from drone_connect import *
 from serial import Serial
 from camera_process import *
+import cv2
 
 # Gives this file "project import context"
 import sys, os
@@ -14,10 +15,12 @@ sys.path.append(project_root)
 
 # Set up option parsing to get connection string
 import argparse
-import logging
-import cv2
+parser = argparse.ArgumentParser(description="Connect to a drone.")
+parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
+args = parser.parse_args()
 
 #LOGGER SETUP TO USE CUSTOM LOGS REQUIRED PER AVC RULEBOOK
+import logging
 AVC_LOG = 25  # Pick a value that does not clash with existing levels
 logging.addLevelName(AVC_LOG, "AVC")
 def log_avc(self, message, *args, **kwargs):
@@ -40,21 +43,11 @@ logger = logging.getLogger("FlightLogger")
 
 
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
-espPORT = '/dev/ttyUSB0'  # Change to your actual port
-espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
-frame_width = 1280
-frame_height = 720
-#Added this to grab frames for video
-FPS = 30
-#end
-
-
-parser = argparse.ArgumentParser(description="Connect to a drone.")
-parser.add_argument("--livedrone", action="store_true", help="Connect to a real drone instead of simulating.")
-args = parser.parse_args()
-
-# Set SIMULATE_DRONE based on the --livedrone flag
-SIMULATE_DRONE = not args.livedrone  # False if --livedrone is provided, otherwise True
+ESP_PORT = '/dev/ttyUSB0'  # Change to your actual port
+ESP_BAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
+FRAME_WEIGHT = 1280
+FRAME_HEIGHT = 720
+FPS = 30 # Added this to grab frames for video
 ALTITUDE = 4
 
 
@@ -64,7 +57,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
 
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     if(USING_ZED_CAMERA):
-        ground_coverage_width, ground_coverage_height = get_image_dimensions_meters((frame_width,frame_height), camera_matrix,
+        ground_coverage_width, ground_coverage_height = get_image_dimensions_meters((FRAME_WEIGHT, FRAME_WEIGHT), camera_matrix,
                                                                                                 ALTITUDE)
     else:
         ground_coverage_width, ground_coverage_height = 5,3
@@ -109,14 +102,14 @@ def search_algorithm(marker_queue, isMarkerFound):
                     isMarkerFound.value = False
 
 def camera_run(marker_queue, distance_to_marker_queue):
-    camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
+    camera = Camera(USING_ZED_CAMERA, FRAME_WEIGHT, FRAME_HEIGHT)
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
     
     # Initialize VideoWriter to save video
     output_filename = "Record_while_flying.avi"
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
-    video_writer = cv2.VideoWriter(output_filename, fourcc, FPS, (frame_width, frame_height))
+    video_writer = cv2.VideoWriter(output_filename, fourcc, FPS, (FRAME_WEIGHT, FRAME_HEIGHT))
     print(f"Saving video to: {os.path.abspath(output_filename)}")
     # end
     while True:
@@ -128,7 +121,7 @@ def camera_run(marker_queue, distance_to_marker_queue):
         camera_position, processed_frame = detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, 0)
 
         #Added to try to record, havent test      
-        frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
+        frame = cv2.resize(frame, (FRAME_WEIGHT, FRAME_HEIGHT))  # Ensure size consistency
         #marker_list = get_detected_markers(frame, camera) #Dont know why this isnt working get_detected_marker is used as detect_markers here
         video_writer.write(frame)  # Write the frame to the output file
         #end
@@ -174,7 +167,7 @@ if __name__ == "__main__":
         
         # Try to establish the serial connection
         print("Waiting for serial connection...")
-        ser = Serial(espPORT, espBAUDRATE, timeout=1)
+        ser = Serial(ESP_PORT, ESP_BAUDRATE, timeout=1)
         
         # Give it some time to establish
         time.sleep(2)
@@ -223,4 +216,3 @@ if __name__ == "__main__":
         if ser.is_open:
             ser.close()
         print("Closed serial connection.")
-        

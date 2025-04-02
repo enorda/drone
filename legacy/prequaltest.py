@@ -6,7 +6,7 @@ import cv2
 import cv2.aruco as aruco
 import serial
 import numpy as np
-# from pyproj import Proj
+#from pyproj import Proj
 
 
 ALTITUDE = 2  # Altitude to take off to (meters)

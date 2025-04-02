@@ -40,15 +40,15 @@ class Camera:
         global sl
         self.zed = sl.Camera()
         self.init = sl.InitParameters()
-        self.init.camera_resolution = sl.RESOLUTION.HD1080 #Likely will need to change resolution to get better framerate
-        self.init.depth_mode = sl.DEPTH_MODE.NONE
+        self.init.camera_resolution = sl.RESOLUTION.HD1080  # Resolution setup (HD 1080p)
+        self.init.depth_mode = sl.DEPTH_MODE.NONE  # No depth information
         self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)
         self.status = self.zed.open(self.init)
         if self.status != sl.ERROR_CODE.SUCCESS:
             raise RuntimeError(f"Error opening ZED camera: {self.status}")
 
     def initialize_standard_camera(self):
-        self = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             raise RuntimeError("Error opening the standard camera")
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
@@ -73,9 +73,8 @@ class Camera:
             image = sl.Mat()
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
             frame = image.get_data()
-            frame=cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
             return frame
-    
 
     def get_standard_frame(self):
         ret, frame = self.cap.read()

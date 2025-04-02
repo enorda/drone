@@ -1,6 +1,7 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+import pyzed as sl
 
 USING_ZED_CAMERA = False  # Set to True if using the ZED camera, False otherwise
 CALIBRATION_FILE_PATH = "calibration_chessboard.yaml"  # Path to your calibration file
@@ -20,7 +21,6 @@ class Camera:
 
     def initialize_zed_camera(self):
         global sl
-        import pyzed.sl as sl
         self.zed = sl.Camera()
         self.init = sl.InitParameters()
         self.init.camera_resolution = sl.RESOLUTION.HD1080

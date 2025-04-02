@@ -2,7 +2,6 @@ from __future__ import print_function
 import multiprocessing
 from search_alg import *
 from drone_process import connectMyCopter
-#import time
 from camera_process import *
 
 # Set up option parsing to get connection string
@@ -43,9 +42,7 @@ espPORT = '/dev/ttyUSB0'  # Change to your actual port
 espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
 frame_width = 1280
 frame_height = 720
-#Added this to grab frames for video
-fps = 30
-#end
+fps = 30 # Added this to grab frames for video
 
 
 def camera_run(marker_queue, distance_to_marker_queue):
