@@ -3,69 +3,14 @@ import cv2.aruco as aruco
 import numpy as np
 import pyzed as sl
 
+from scout.camera_process import Camera
+
 USING_ZED_CAMERA = False  # Set to True if using the ZED camera, False otherwise
+FRAME_HEIGHT = 1280
+FRAME_WIDTH = 720
+FPS = 30
 CALIBRATION_FILE_PATH = "calibration_chessboard.yaml"  # Path to your calibration file
 MARKER_SIZE = 0.1  # Marker size in meters
-
-
-class Camera:
-    def __init__(self):
-        print("Initializing camera...")
-
-        if USING_ZED_CAMERA:
-            self.initialize_zed_camera()
-        else:
-            self.initialize_standard_camera()
-
-        print("Camera initialized")
-
-    def initialize_zed_camera(self):
-        global sl
-        self.zed = sl.Camera()
-        self.init = sl.InitParameters()
-        self.init.camera_resolution = sl.RESOLUTION.HD1080
-        self.init.depth_mode = sl.DEPTH_MODE.NONE
-        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)
-        self.status = self.zed.open(self.init)
-        if self.status != sl.ERROR_CODE.SUCCESS:
-            raise RuntimeError(f"Error opening ZED camera: {self.status}")
-
-    def initialize_standard_camera(self):
-        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        if not self.cap.isOpened():
-            raise RuntimeError("Error opening the standard camera")
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-    def get_frame(self):
-        if USING_ZED_CAMERA:
-            return self.get_zed_frame()
-        else:
-            return self.get_standard_frame()
-
-    def get_zed_frame(self):
-        global sl
-        if self.zed.grab() != sl.ERROR_CODE.SUCCESS:
-            print("Error grabbing frame from ZED camera")
-            return None
-        image = sl.Mat()
-        self.zed.retrieve_image(image, sl.VIEW.LEFT)
-        frame = image.get_data()
-        return cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
-
-    def get_standard_frame(self):
-        ret, frame = self.cap.read()
-        if not ret:
-            print("Error grabbing frame from standard camera")
-            return None
-        return frame
-
-    def close(self):
-        if USING_ZED_CAMERA:
-            self.zed.close()
-        else:
-            self.cap.release()
-        cv2.destroyAllWindows()
 
 
 def load_calibration(file_path):
@@ -135,15 +80,13 @@ def label_marker(frame, corner, marker_id, tvec):
 
 
 def main():
-    camera = Camera()
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
-    frame_width = 1280
-    frame_height = 720
-    fps = 30
-    output_filename = "output.avi"
+    camera = Camera(USING_ZED_CAMERA, FRAME_WIDTH, FRAME_HEIGHT)
+
+    output_filename = "images/output.avi"
 
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
+    video_writer = cv2.VideoWriter(output_filename, fourcc, FPS, (FRAME_WIDTH, FRAME_HEIGHT))
 
     try:
         while True:
