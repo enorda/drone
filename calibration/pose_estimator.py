@@ -1,7 +1,7 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import pyzed as sl
+#import pyzed as sl
 
 from scout.camera_process import Camera
 

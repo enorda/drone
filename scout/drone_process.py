@@ -249,4 +249,3 @@ def flyInSearchPattern(vehicle: Vehicle, location_queue, isMarkerFound, distance
                 print("Distance to WP:", equirectangular_approximation(getCurrentLocation(vehicle),currentWP))
                 time.sleep(1)
                 '''
-
