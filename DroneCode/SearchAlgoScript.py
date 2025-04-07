@@ -277,6 +277,29 @@ def load_waypoints_from_csv(file_path):
             csv_loaded_waypoints.append(LocationGlobalRelative(latitude, longitude, altitude))
     return csv_loaded_waypoints
 
+def load_second_waypoints_from_csv(file_path):
+    global ALTITUDE
+    csv_loaded_waypoints = []
+    with open(file_path, 'r') as file:
+        reader = csv.DictReader(file)
+        for idx, row in enumerate(reader):
+            latitude = float(row['latitude'])
+            longitude = float(row['longitude'])
+            altitude = float(ALTITUDE)
+
+            original_point = Point(latitude, longitude)
+
+            # Offset by 1 meter: even index -> 1m east, odd index -> 1m west
+            bearing = 90 if idx % 2 == 0 else 270  # 90° is East, 270° is West
+            offset_point = geodesic(meters=10).destination(original_point, bearing)
+
+            offset_lat = offset_point.latitude
+            offset_lon = offset_point.longitude
+
+            csv_loaded_waypoints.append(LocationGlobalRelative(offset_lat, offset_lon, altitude))
+
+    return csv_loaded_waypoints
+
 def run_path_generation(vehicle, heading, frame_width_meters, frame_height_meters):
     # Wait for the vehicle to have a GPS fix
     fence_waypoint_array = []
