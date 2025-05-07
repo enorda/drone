@@ -1,0 +1,38 @@
+def comms(ser, isMarkerFound, location_queue):
+    #Tell coms queue is ready TN 2/28
+    #comms_ready.set()
+
+    while True:
+        location_queue.put([32.123213, -92.1231231])      # FOR DEBUGGING
+        location_queue.put([90.123213, -20.1231231])      # FOR DEBUGGING
+        if not location_queue.empty():
+        # while True:
+            locationTuple = location_queue.get()
+            data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
+            # data = str(55151) + str("\n")
+
+            ser.write(data.encode('utf-8'))
+            # ser.write(data1.encode('utf-8'))              # FOR DEBUGGING
+            print(f"Sent: {data}")
+            logger.avc(f"Sent From Jetson: {data}")
+            while (not(ser.in_waiting > 0)):
+                time.sleep(0.1)
+            if ser.in_waiting > 0:
+                message = ser.readline().decode('iso-8859-1').strip()
+                if (message[0:3] == "MSG") :
+                    print(f"{message}\n")
+                    while(message[0:8] == "MSG_FAIL"):
+                        print(f"ESP_FAIL, SENT :: {data}")
+                        ser.write(data.encode('utf-8'))
+                        while (not (ser.in_waiting > 0)):
+                            time.sleep(0.1)
+                        message = ser.readline().decode('iso-8859-1').strip()
+
+                else:
+                    # ESP32 reset occurred, read to clear serial buffer
+                    while ser.in_waiting > 0:
+                        message = ser.readline().decode('iso-8859-1').strip()
+            if(isMarkerFound.value):
+                logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
+            time.sleep(1)  # Wait 1 second before sending the next message
+
