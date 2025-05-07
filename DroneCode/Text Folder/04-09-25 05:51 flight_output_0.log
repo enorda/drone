@@ -1,0 +1,174 @@
+[04-09-25 - 05:51:07] Waiting for serial connection...
+[04-09-25 - 05:51:09] Serial connection established successfully.
+[04-09-25 - 05:51:13] Search ready
+[04-09-25 - 05:51:13] W:5.141332824271612H:2.520747137554955
+[04-09-25 - 05:51:13] Starting Location: , (32.729357, -97.1266433)
+[04-09-25 - 05:51:13] Heading: 
+[04-09-25 - 05:51:13] 284
+[04-09-25 - 05:51:13] The drone is now armable
+[04-09-25 - 05:51:13] The drone is not in guided mode yet
+[04-09-25 - 05:51:14] The drone is now in guided mode
+[04-09-25 - 05:51:14] Waiting for drone to arm: 
+[04-09-25 - 05:51:14] {'STANDBY'}
+[04-09-25 - 05:51:15] Waiting for drone to arm: 
+[04-09-25 - 05:51:15] {'STANDBY'}
+[04-09-25 - 05:51:16] The drone has now been armed
+[04-09-25 - 05:51:16] Copter GPS Ready
+[04-09-25 - 05:51:16] gpsfixed
+[04-09-25 - 05:51:16] getting the cmds position
+[04-09-25 - 05:51:16] cmds: <dronekit.CommandSequence object at 0xffffa56f2cb0>
+[04-09-25 - 05:51:16] Mission commands:
+[04-09-25 - 05:51:16] 1, 32.72940444946289, -97.12666320800781, 100.0
+[04-09-25 - 05:51:16] 2, 32.72940444946289, -97.1263656616211, 100.0
+[04-09-25 - 05:51:16] 3, 32.72962951660156, -97.12637329101562, 100.0
+[04-09-25 - 05:51:16] 4, 32.7296257019043, -97.12666320800781, 100.0
+[04-09-25 - 05:51:16] 5, 32.72970199584961, -97.12651824951172, 100.0
+[04-09-25 - 05:51:16] Home Location: Latitude=32.7293586730957, Longitude=-97.12664794921875, Altitude=184.5
+[04-09-25 - 05:51:16] Horiz: 27.832753275896966, Vert: 25.03649738839958 
+[04-09-25 - 05:51:16] 0.00029754638671875
+[04-09-25 - 05:51:16] 0.0002251964133170386
+[04-09-25 - 05:51:16] [[ 32.72940445 -97.12636566]
+ [ 32.72940445 -97.12666321]
+ [ 32.72944196 -97.12666448]
+ [ 32.72944196 -97.12636693]
+ [ 32.72947947 -97.1263682 ]
+ [ 32.72947947 -97.12666575]
+ [ 32.72951698 -97.12666702]
+ [ 32.72951698 -97.12636948]
+ [ 32.72955449 -97.12637075]
+ [ 32.72955449 -97.12666829]
+ [ 32.72959201 -97.12666957]
+ [ 32.72959201 -97.12637202]
+ [ 32.72962952 -97.12637329]
+ [ 32.72962952 -97.12667084]]
+[04-09-25 - 05:51:16] Waypoints saved to generated_search_pattern_waypoints.csv
+[04-09-25 - 05:51:16] [[1, 32.72940444946289, -97.12666320800781, 100.0], [2, 32.72940444946289, -97.1263656616211, 100.0], [3, 32.72962951660156, -97.12637329101562, 100.0], [4, 32.7296257019043, -97.12666320800781, 100.0], [5, 32.72970199584961, -97.12651824951172, 100.0]]
+[04-09-25 - 05:51:16] fence: (32.72940444946289, -97.12666320800781)
+[04-09-25 - 05:51:16] fence: (32.72940444946289, -97.1263656616211)
+[04-09-25 - 05:51:16] fence: (32.72962951660156, -97.12637329101562)
+[04-09-25 - 05:51:16] fence: (32.7296257019043, -97.12666320800781)
+[04-09-25 - 05:51:22] Set default/target airspeed to 3
+[04-09-25 - 05:51:22] Set default/target airspeed to 3
+[04-09-25 - 05:51:22] Taking off!
+[04-09-25 - 05:51:22]  Altitude: 
+[04-09-25 - 05:51:22] 0.012
+[04-09-25 - 05:51:23]  Altitude: 
+[04-09-25 - 05:51:23] 0.018
+[04-09-25 - 05:51:24]  Altitude: 
+[04-09-25 - 05:51:24] 0.485
+[04-09-25 - 05:51:25]  Altitude: 
+[04-09-25 - 05:51:25] 1.137
+[04-09-25 - 05:51:26]  Altitude: 
+[04-09-25 - 05:51:26] 1.819
+[04-09-25 - 05:51:27]  Altitude: 
+[04-09-25 - 05:51:27] 2.68
+[04-09-25 - 05:51:28]  Altitude: 
+[04-09-25 - 05:51:28] 3.354
+[04-09-25 - 05:51:29]  Altitude: 
+[04-09-25 - 05:51:29] 3.762
+[04-09-25 - 05:51:29] Reached target altitude
+[04-09-25 - 05:51:29] Waypoint:
+[04-09-25 - 05:51:29] (32.72962951660156, -97.12667083740239)
+[04-09-25 - 05:51:43] Waypoint:
+[04-09-25 - 05:51:43] (32.72962951660155, -97.12637329101558)
+[04-09-25 - 05:51:57] Waypoint:
+[04-09-25 - 05:51:57] (32.729592005411774, -97.12637201944983)
+[04-09-25 - 05:52:00] Waypoint:
+[04-09-25 - 05:52:00] (32.72959200541179, -97.12666956583662)
+[04-09-25 - 05:52:13] Waypoint:
+[04-09-25 - 05:52:13] (32.72955449422201, -97.12666829427087)
+[04-09-25 - 05:52:16] Waypoint:
+[04-09-25 - 05:52:16] (32.72955449422199, -97.12637074788407)
+[04-09-25 - 05:52:24] Found Marker, stopping
+[04-09-25 - 05:52:24] Returning to Launch
+[04-09-25 - 05:52:24] Close vehicle object
+[04-09-25 - 06:05:42] Closed serial connection.
+[04-09-25 - 05:52:25] Sent: [32.7295518, -97.1265042]
+
+[04-09-25 - 05:52:25] Received: MSG_OK :: Sent: [32.7295518, -97.1265042]
+[04-09-25 - 06:05:42] Process Process-4:
+
+[04-09-25 - 06:05:42] Traceback (most recent call last):
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+
+[04-09-25 - 06:05:42]   File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 334, in comms
+    time.sleep(1)  # Wait before sending the next message
+
+[04-09-25 - 06:05:42] KeyboardInterrupt
+
+[04-09-25 - 06:05:42] Traceback (most recent call last):
+
+[04-09-25 - 06:05:42]   File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 387, in <module>
+
+[04-09-25 - 06:05:42] camera_process.join()
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 149, in join
+
+[04-09-25 - 06:05:42] res = self._popen.wait(timeout)
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 43, in wait
+
+[04-09-25 - 06:05:42] return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 27, in poll
+
+[04-09-25 - 06:05:42] pid, sts = os.waitpid(self.pid, flag)
+[04-09-25 - 06:05:42] KeyboardInterrupt
+[04-09-25 - 05:51:09] Comms Ready
+[04-09-25 - 06:05:42] Process Process-3:
+
+[04-09-25 - 06:05:42] Traceback (most recent call last):
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+
+[04-09-25 - 06:05:42]   File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 221, in search_algorithm
+    if not marker_queue.empty():
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/queues.py", line 129, in empty
+    return not self._poll()
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/connection.py", line 257, in poll
+    return self._poll(timeout)
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/connection.py", line 424, in _poll
+    r = wait([self], timeout)
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/connection.py", line 923, in wait
+    with _WaitSelector() as selector:
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/selectors.py", line 349, in __init__
+    super().__init__()
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/selectors.py", line 214, in __init__
+    self._map = _SelectorMapping(self)
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/selectors.py", line 64, in __init__
+    def __init__(self, selector):
+
+[04-09-25 - 06:05:42] KeyboardInterrupt
+
+[04-09-25 - 05:51:09] Initializing camera...
+[04-09-25 - 05:51:15] Camera initialized
+[04-09-25 - 05:51:31] Saving video to: /home/enorda/DroneCodeRepo/drone/DroneCode/Recording Folder/04-09-25 05:51 Record_while_flying.avi
+[04-09-25 - 05:51:31] Camera ready
+[04-09-25 - 06:05:42] Process Process-2:
+
+[04-09-25 - 06:05:42] Traceback (most recent call last):
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+
+[04-09-25 - 06:05:42]   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+
+[04-09-25 - 06:05:42]   File "/home/enorda/DroneCodeRepo/drone/DroneCode/IntegratedUAVcode.py", line 260, in camera_run
+    video_writer.write(frame)  # Write the frame to the output file
+
+[04-09-25 - 06:05:42] KeyboardInterrupt
+
