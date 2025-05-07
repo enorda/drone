@@ -1,0 +1,11 @@
+# .gitignore
+
+# Python cache
+**/__pycache__/
+
+# Virtual enviroment directories
+.venv/
+.conda/
+
+# Generated files
+generated_*
