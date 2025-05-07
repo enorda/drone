@@ -83,6 +83,14 @@ class CustomLevelFilter(logging.Filter):
     def filter(self, record):
         return record.levelno == AVC_LOG
 
+# flag for comms set in drone_control
+global isSearching
+isSearching = False
+
+# flag for comms set in drone_control
+global isHoming
+isHoming = False
+
 # Function to generate a unique filename
 def get_unique_filename(base_filename):
     """
@@ -140,6 +148,7 @@ class Output:
 sys.stdout = Output(unique_output_filename)
 sys.stderr = sys.stdout
 
+MARKER_ID = 4 # Set the marker ID to detect
 USING_ZED_CAMERA = True  # Set to True if using the ZED camera, False otherwise
 espPORT = '/dev/ttyUSB0'  # Change to your actual port
 espBAUDRATE = 115200  # Ensure this matches the ESP32 baud rate
@@ -173,7 +182,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     print(f"W:{ground_coverage_width}H:{ground_coverage_height}")
 
     print(f"Starting Location: , ({vehicle.location.global_relative_frame.lat}, {vehicle.location.global_relative_frame.lon})")
-    location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
+    #location_queue.put([vehicle.location.global_relative_frame.lat,vehicle.location.global_relative_frame.lon])
     print("Heading: ", vehicle.heading)
 
     logger.avc("Arming Drone")
@@ -183,7 +192,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     waypoints, top_left_corner, top_right_corner, landing_zone_waypoint = run_path_generation(vehicle,vehicle.heading,ground_coverage_width,ground_coverage_height) #6 and 8 are rough numbers for testing 
 
     print("Set default/target airspeed to 3")
-    vehicle.airspeed = 3
+    vehicle.airspeed = 8
 
     logger.avc("UAV START: TAKING OFF")
     print("Set default/target airspeed to 3")
@@ -194,6 +203,7 @@ def drone_control(location_queue, isMarkerFound, distance_to_marker_queue):
     
     print("Returning to Launch")
     vehicle.mode = VehicleMode("RTL")
+    #isHoming = True
 
     print("Close vehicle object")
     vehicle.close()
@@ -206,12 +216,14 @@ def search_algorithm(marker_queue, isMarkerFound):
 
     #Set search queue to ready TN 2/28
     search_ready.set()
+    isSearching = True
     while True:
         if not marker_queue.empty():
             marker_id = marker_queue.get()
-            if marker_id == 0:
+            if marker_id == MARKER_ID:
                 with isMarkerFound.get_lock():
                     isMarkerFound.value = True
+                    #isSearching = False
             else:
                 with isMarkerFound.get_lock():
                     isMarkerFound.value = False
@@ -219,8 +231,6 @@ def search_algorithm(marker_queue, isMarkerFound):
 
 def camera_run(marker_queue, distance_to_marker_queue):
    #Tell camera Queue is ready TN 2/28
-    camera_ready.set()
-    print("Camera ready")
     camera = Camera(USING_ZED_CAMERA, frame_width, frame_height)
     camera_matrix, dist_coeffs = load_calibration(CALIBRATION_FILE_PATH)
     cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL) #Added this to make the windows adjustable but havent tested
@@ -231,16 +241,18 @@ def camera_run(marker_queue, distance_to_marker_queue):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for AVI file
     video_writer = cv2.VideoWriter(unique_output_filename , fourcc, fps, (frame_width, frame_height))
     print(f"Saving video to: {os.path.abspath(output_filename)}")
+    camera_ready.set()
+    print("Camera ready")
     # end
     #Added 2/27
-    coordinates_saved = False
+    #coordinates_saved = False
     while True:
         
         frame = camera.get_frame()
         if frame is None:
             break
 
-        camera_position, processed_frame = detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, 0)
+        camera_position, processed_frame = detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, MARKER_ID)
 
         #Added to try to record, havent test      
         frame = cv2.resize(frame, (frame_width, frame_height))  # Ensure size consistency
@@ -251,10 +263,12 @@ def camera_run(marker_queue, distance_to_marker_queue):
         if camera_position is not None:
             marker_id, tvec = camera_position
            #Added this to see if the coordinates will stop updating once the marker is found TN 2/27
-            if not coordinates_saved and marker_id == 0:
+            '''
+            if not coordinates_saved and marker_id == MARKER_ID:
                 print(f"TVEC in camera_run: {tvec}")
                 coordinates_saved = True
             #End
+            '''
             distance_to_marker_queue.put(tvec)
         # Display camera positions in the corner of the window
         display_camera_position(processed_frame, camera_position)
@@ -278,25 +292,48 @@ def dummy_coords2 ():
 '''
 
 def comms(ser, isMarkerFound, location_queue):
-    #Tell coms queue is ready TN 2/28
-    comms_ready.set()
-
     while True:
-        # location_queue.put([32.123213, -92.1231231])      # FOR DEBUGGING
-        # location_queue.put([90.123213, -20.1231231])      # FOR DEBUGGING
+        #location_queue.put([32.123213, -92.1231231])  # FOR DEBUGGING
+        # location_queue.put([90.123213, -20.1231231])  # FOR DEBUGGING
+        #location_queue.put([32.123213, -92.1231231])
+        comms_ready.set()
+
         if not location_queue.empty():
             locationTuple = location_queue.get()
-            data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
-            ser.write(data.encode('utf-8'))
-            # ser.write(data1.encode('utf-8'))              # FOR DEBUGGING
-            #print(f"Sent: {data}")
-            #logger.avc(f"Sent From Jetson: {data}")
-            if ser.in_waiting > 0:
-                message = ser.readline().decode('utf-8').strip()
-                logger.avc(f"{message}\n")
-            if(isMarkerFound.value):
-                logger.avc(f"ArUco Marker Found At {str(locationTuple)}")
-            #time.sleep(1)  # Wait 1 second before sending the next message
+            # data = str(locationTuple) + str(isMarkerFound.value) + str("\n")
+            data = str(locationTuple) + str("\n")
+            ser.write(str("Sent: ").encode ('UTF-8') + data.encode('utf-8'))
+            print(f"Sent: {data}")
+            logger.avc(f"Sent From Jetson: {data}")
+
+            while True:
+                while not ser.in_waiting:  # Wait for response
+                    time.sleep(0.1)
+
+                message = ser.readline().decode('iso-8859-1').strip()
+                if (message.startswith("MSG_FAIL") or message.startswith("MSG_OK")):
+                    print(f"Received: {message}")
+                else:
+                    # for clearing message buffer upon reset
+                    while (ser.in_waiting > 0):
+                        ser.readline()
+
+                if not (message.startswith("MSG_OK")):
+                    print(f"ESP_FAIL, Resending: {data}")
+                    ser.write(data.encode('utf-8'))
+                    time.sleep(0.2)  # Give ESP time to process
+                else:
+                    break  # Message is not MSG_FAIL, proceed
+
+            # Clear any extra data in buffer to avoid stale messages
+            while ser.in_waiting > 0:
+                message = ser.readline().decode('iso-8859-1').strip()
+                #print(f"Received: {message}")   
+
+
+        time.sleep(1)  # Wait before sending the next message
+
+
 
 if __name__ == "__main__":
     

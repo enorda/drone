@@ -16,11 +16,22 @@ class Camera:
             self.init = sl.InitParameters()
             self.init.camera_resolution = sl.RESOLUTION.HD1080
             self.init.depth_mode = sl.DEPTH_MODE.NONE
-            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)
+            
+            
+
+
             self.status = self.zed.open(self.init)
             if self.status != sl.ERROR_CODE.SUCCESS:
                 print(f"Error opening ZED camera: {self.status}, is the camera connected?")
                 return None
+            
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 2)     # 0 (dark) to 100 (bright)
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.GAIN, 50)         # 0 to 100
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.BRIGHTNESS, 4)    # 0 to 8
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.CONTRAST, 8)      # 0 to 8
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.SATURATION, 0)    # 0 to 8
+            self.zed.set_camera_settings(sl.VIDEO_SETTINGS.HUE, 0)           # -180 to 180 (typically 0 is neutral)self
+            #self.zed.set_camera_settings(sl.VIDSO_SETTINGS.SHARPNESS, 8)     # 0 to 8
 
         else:
             self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)

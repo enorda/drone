@@ -34,10 +34,17 @@ class Camera:
         self.init = sl.InitParameters()
         self.init.camera_resolution = sl.RESOLUTION.HD1080 #Likely will need to change resolution to get better framerate
         self.init.depth_mode = sl.DEPTH_MODE.NONE
-        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)
         self.status = self.zed.open(self.init)
         if self.status != sl.ERROR_CODE.SUCCESS:
             raise RuntimeError(f"Error opening ZED camera: {self.status}")
+        
+
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, 1)     # 0 (dark) to 100 (bright)
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.GAIN, 50)         # 0 to 100
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.BRIGHTNESS, 4)    # 0 to 8
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.CONTRAST, 8)      # 0 to 8
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.SATURATION, 0)    # 0 to 8
+        self.zed.set_camera_settings(sl.VIDEO_SETTINGS.HUE, 0)           # -180 to 180 (typically 0 is neutral)
 
     def initialize_standard_camera(self):
         self = cv2.VideoCapture(0)
@@ -45,6 +52,7 @@ class Camera:
             raise RuntimeError("Error opening the standard camera")
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
+        #self.cap.set(cv2.CAP_PROP_EXPOSURE, 10)
 
     def get_frame(self):
         """
@@ -65,7 +73,7 @@ class Camera:
             image = sl.Mat()
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
             frame = image.get_data()
-            frame=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame=cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
             return frame
     
 
@@ -134,7 +142,7 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
     #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
     # Adjust brightness by increasing L-channel
-    brightness_increase = 255  # Adjust this value as needed
+    brightness_increase = 0  # Adjust this value as needed
     gray[:, :, 0] = np.clip(gray[:, :, 0] + brightness_increase, 0, 255)
 
     avg_a = np.average(gray[:, :, 1])
@@ -166,6 +174,7 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
 
     cv2.imshow('Result', result)
     """
+
     aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
     corners, ids, _ = aruco.detectMarkers(gray, aruco_dict)
 
@@ -184,13 +193,13 @@ def detect_markers(frame, marker_queue, camera_matrix, dist_coeffs, drop_zone_id
                 if rvecs is not None and tvecs is not None:
                     rvec, tvec = rvecs[0].flatten(), tvecs[0].flatten()
 
-                    #print(f"RVEC: {rvec}    TVEC: {tvec}")
+
                     
                     # Store tvec for the drop zone marker
                     camera_relative_position = (marker_id, tvec)
                     
                     # Print the pose for debugging purposes
-                   # print(f"Marker ID: {marker_id}, rvec: {rvec:.2f}, tvec: {tvec:.2f}")
+                    #print(f"Marker ID: {marker_id}, rvec: {rvec:.2f}, tvec: {tvec:.2f}")
                     
                     # Draw the axes (continuously in each frame where the marker is detected)
                     cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.05)
@@ -212,7 +221,7 @@ def display_camera_position(frame, camera_relative_position):
         side_distance = tvec[0]  # X-axis distance
         forward_distance = tvec[1] # Y-axis distance
         height_distance = tvec[2]  # Z-axis distance
-        distance_info = f"Marker {marker_id}: Fwd: {forward_distance:.2f} m, Side: {side_distance:.2f} m, Ht: {height_distance:.2f} m"
+        distance_info = f"Marker {marker_id}:  Side: {side_distance:.2f} m, Fwd: {forward_distance:.2f} m, Ht: {height_distance:.2f} m"
 
         # Display the string on the frame
         text_position = (10, 30)  # Top-left corner
@@ -227,12 +236,9 @@ def label_marker(frame, corner, marker_id, tvec):
     cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
     cv2.putText(frame, f"ID: {marker_id}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-    cv2.putText(frame, f"Marker ID: {marker_id}, tvec: {tvec}", (zone_label_position[0], zone_label_position[1] + 50),
+    cv2.putText(frame, f"ID: {marker_id}, tvec: ({tvec[0]:.2f}, {tvec[1]:.2f}", (zone_label_position[0], zone_label_position[1] + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-    #Added to debug values TN 2/28
-    tx = tvec[0]
-    ty = tvec[1]
-    #print(f"TX: {tx:.2f} TY: {ty:.2f}")
+    
 def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     """
     Calculates the Ground Sampling Distance (GSD) in meters per pixel for the ZED camera, then calculates the
@@ -265,3 +271,53 @@ def get_image_dimensions_meters(dimensions, camera_matrix, frame_altitude):
     frame_width = frame_altitude * tan(radians(fov_horizontal / 2.0)) * 2.0 * magnification
 
     return frame_width, frame_height
+
+'''
+def get_detected_markers(frame, camera: Camera = None):
+    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+
+    # Initialize the aruco dictionary and parameters
+    aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
+
+    # Initialize the list of detected markers
+    detected_markers = []
+
+    # Detect the markers in the frame
+    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)  # , parameters=parameters)
+
+    if ids is not None:
+        # Show the detected markers
+        frame = aruco.drawDetectedMarkers(frame, corners)
+
+        for i, marker_id in enumerate(ids.flatten()):
+            corner = corners[i][0]
+            # Estimate pose for the current marker
+            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corner, MARKER_SIZE, camera_matrix, dist_coeffs)
+
+            if marker_id == 0:
+                color = (0,255,0)
+                zone_label = "Drop Zone"
+            else:
+                color = (0,0,255)
+                zone_label = "Non-Drop Zone"
+            
+            cv2.polylines(frame, [corner.astype(int)], isClosed=True, color=color, thickness=3)
+            zone_label_position = np.mean(corner, axis=0).astype(int)
+            cv2.putText(frame, zone_label, tuple(zone_label_position), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+            id_label_position = (zone_label_position[0], zone_label_position[1] + 50)
+            cv2.putText(frame, f"ID: {marker_id}", id_label_position, cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+            # Display rvec and tvec below the ID
+   
+        camera.showFrame(frame)
+
+        # Add all detected ids to the list
+        detected_markers.extend(ids)
+
+    else:
+        camera.getFrameAndShow()
+
+    # Return the dictionary of detected markers
+    print(f"Detected markers: {detected_markers}")
+    return detected_markers
+    
+'''
