@@ -11,11 +11,9 @@
 generated_*
 
 # Output directories & files
-/DroneCode/Logging Folder/
-/DroneCode/Recording Folder/
-/DroneCode/Text Folder/
-**/Recording Folder/
-**/Text Folder/
+DroneCode/Logging Folder/
+DroneCode/Recording Folder/
+DroneCode/Text Folder/
 *.avi
 *.csv
 *.log
