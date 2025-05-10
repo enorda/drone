@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+d95c47a75682def509ac10079d7e922c84de19b5 refs/heads/CameraStuff
+2e1e7394e283eabbc2794c2e3a6207ba2aaf5c9a refs/heads/WorkingOnHoming
+0555c272f7b26b52ea2a3177eb52d63a3bf10d3d refs/heads/final
+0555c272f7b26b52ea2a3177eb52d63a3bf10d3d refs/heads/main
+1b4d09f312aa5b984331be258a22a93f66791510 refs/heads/master
+c14c41cff7f8d497871ccaa5c0a4d15fe8335ab8 refs/heads/opt
+87a678224f1df8e1ed4bb21b3104b62f9247cf0a refs/heads/testingSim
+5824722a5f25d6e9c87e090e040976c3e81a6140 refs/pull/1/head
+62d560f954ea8400ef4046a9eb3a8580659fb461 refs/pull/2/head
+278376c9346af68c310738c789fd39bedbed982b refs/pull/3/head
+dd7ca042a7735d946200337bd41144894cf38b20 refs/pull/4/head
+7758d548c0ba4ba47ee955ce1dc55a3609553cdf refs/pull/5/head
+54d67690fc52b6206360dec6e618769b0b73df3f refs/pull/6/head

@@ -14,9 +14,6 @@ generated_*
 DroneCode/Logging Folder/
 DroneCode/Recording Folder/
 DroneCode/Text Folder/
-23-24DroneCode/
-CameraCalibration/CalibrationImages/
-ESP32/
 *.avi
 *.csv
 *.log
