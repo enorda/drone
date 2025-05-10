@@ -20,3 +20,5 @@ ESP32/
 *.avi
 *.csv
 *.log
+*.jpg
+*.png
