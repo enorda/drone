@@ -1,7 +1,5 @@
 # .gitignore
 
-.git/
-
 # Python cache
 **/__pycache__/
 
